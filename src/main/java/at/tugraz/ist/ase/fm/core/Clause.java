@@ -8,56 +8,57 @@
 
 package at.tugraz.ist.ase.fm.core;
 
-/***
- * Represents a clause of a test case.
+import at.tugraz.ist.ase.common.LoggerUtils;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Represents a clause of 3-CNF formulas.
  *
  * A Clause is written as follows:
  * F1 - i.e., F1 = true
  * ~F1 - i.e., F1 = false
  * where the symbol F1 is a literal, and ~ denotes to the negation.
  *
- * This class supports also feature models of Splot with 3-CNF formulas.
  * Refer to http://www.splot-research.org for more info regarding 3-CNF.
- *
- * @author Viet-Man Le (vietman.le@ist.tugraz.at)
  */
+@Getter
+@EqualsAndHashCode
+@Slf4j
 public class Clause {
     private final String literal; // name of clause
-    private final boolean value; // value of clause (true or false)
+    private final boolean positive; // value of clause (true or false)
 
     /**
      * Constructor
      * @param clause in one of two forms: 1) A (i.e., A = true) or 2) ~A (i.e., A = false)
      */
-    public Clause(String clause) {
+    public Clause(@NonNull String clause) {
+        log.debug("{}Creating clause for '{}'", LoggerUtils.tab, clause);
+
         if (clause.startsWith("~")) {
-            value = false;
-            this.literal = clause.substring(1, clause.length());
+            positive = false;
+            literal = clause.substring(1);
         } else {
-            value = true;
-            this.literal = clause;
+            positive = true;
+            literal = clause;
         }
+
+        log.debug("{}Clause for '{}' created", LoggerUtils.tab, this);
     }
 
-    /**
-     * Gets the name of the clause
-     * @return name of the clause
-     */
-    public String getLiteral() {
-        return literal;
-    }
-
-    /**
-     * Gets the value of the clause
-     * @return value of the clause
-     */
-    public boolean getValue() {
-        return value;
+    public String getClause() {
+        if (positive)
+            return literal;
+        else
+            return "~" + literal;
     }
 
     @Override
     public String toString() {
-        return literal + " = " + (value ? "true" : "false");
+        return literal + " = " + (positive ? "true" : "false");
     }
 }
 

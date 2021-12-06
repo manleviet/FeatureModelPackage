@@ -8,11 +8,15 @@
 
 package at.tugraz.ist.ase.fm.parser;
 
+import at.tugraz.ist.ase.common.LoggerUtils;
+import at.tugraz.ist.ase.fm.core.Feature;
 import at.tugraz.ist.ase.fm.core.FeatureModel;
-import at.tugraz.ist.ase.fm.core.Relationship;
+import at.tugraz.ist.ase.fm.core.RelationshipType;
 import constraints.BooleanVariable;
 import constraints.PropositionalFormula;
 import fm.*;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -24,7 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * A parser for the SPLOT format
@@ -34,10 +41,9 @@ import java.util.Queue;
  * Waterloo, Ontario, Canada
  *
  * For further details of this library, we refer to http://52.32.1.180:8080/SPLOT/sxfm.html
- *
- * @author Viet-Man Le (vietman.le@ist.tugraz.at)
  */
-public class SXFMParser implements BaseParser {
+@Slf4j
+public class SXFMParser implements FeatureModelParser {
 
     /**
      * Checks whether the format of the given file is SPLOT format
@@ -47,23 +53,9 @@ public class SXFMParser implements BaseParser {
      *          false - otherwise
      */
     @Override
-    public boolean checkFormat(File filePath) {
-        return isSXFM(filePath);
-    }
-
-    /**
-     * Checks whether the format of the given file is SPLOT format
-     *
-     * @param filePath - a {@link File}
-     * @return true - if the format of the given file is SPLOT format
-     *         false - otherwise
-     */
-    private boolean isSXFM(File filePath) {
-        if (filePath == null) return false;
+    public boolean checkFormat(@NonNull File filePath) {
         // first, check the extension of file
-        if (!filePath.getName().endsWith(".sxfm") && !filePath.getName().endsWith(".splx")) {
-            return false;
-        }
+        checkArgument(filePath.getName().endsWith(".sxfm") || filePath.getName().endsWith(".splx"), "The file is not in SPLOT format!");
         // second, check the structure of file
         try {
             // read the file
@@ -79,7 +71,7 @@ public class SXFMParser implements BaseParser {
                 return true;
             }
         } catch (ParserConfigurationException | SAXException | IOException e) {
-            return false; // if it raise an exception, it's not SPLOT format
+            return false; // if it raises an exception, it's not SPLOT format
         }
         return false;
     }
@@ -89,12 +81,14 @@ public class SXFMParser implements BaseParser {
      *
      * @param filePath - a {@link File}
      * @return a {@link FeatureModel}
-     * @throws ParserException when error occurs in parsing
+     * @throws FeatureModelParserException when error occurs in parsing
      */
     @Override
-    public FeatureModel parse(File filePath) throws ParserException {
-        if (filePath == null) throw new ParserException("filePath cannot be empty!");
-        if (!isSXFM(filePath)) throw new ParserException("The format of file is not SXFM format or there exists errors in the file!");
+    public FeatureModel parse(@NonNull File filePath) throws FeatureModelParserException {
+        checkArgument(checkFormat(filePath), "The format of file is not SPLOT format or there exists errors in the file!");
+
+        log.info("Parsing the feature model file {}", filePath.getName());
+        LoggerUtils.indent();
 
         FeatureModel featureModel;
         try {
@@ -105,12 +99,13 @@ public class SXFMParser implements BaseParser {
 
             // create the feature model
             featureModel = new FeatureModel();
+
+            featureModel.setName(sxfm.getName());
             // convert features
-            ArrayList<String> features = convertFeatures(sxfm);
-            featureModel.addFeatures(features.toArray(new String[0]));
+            convertFeatures(sxfm, featureModel);
 
             if (featureModel.getNumOfFeatures() == 0) {
-                throw new ParserException("Couldn't parse any features in the feature model file!");
+                throw new FeatureModelParserException("Couldn't parse any features in the feature model file!");
             }
 
             // convert relationships
@@ -118,10 +113,12 @@ public class SXFMParser implements BaseParser {
 
             // convert constraints
             convertConstraints(sxfm, featureModel);
-        } catch (FeatureModelException | ParserException | at.tugraz.ist.ase.fm.core.FeatureModelException ex) {
-            throw new ParserException(ex.getMessage());
+        } catch (FeatureModelException | at.tugraz.ist.ase.fm.core.FeatureModelException ex) {
+            throw new FeatureModelParserException(ex.getMessage());
         }
 
+        LoggerUtils.outdent();
+        log.info("Parsing the feature model file {} is done!", filePath.getName());
         return featureModel;
     }
 
@@ -129,42 +126,45 @@ public class SXFMParser implements BaseParser {
      * Iterate nodes to take features.
      *
      * @param sxfm - a {@link fm.FeatureModel}
-     * @return an array of feature names
      */
-    private ArrayList<String> convertFeatures(fm.FeatureModel sxfm) throws ParserException {
-        if (sxfm == null) return null;
+    private void convertFeatures(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException {
+        log.debug("{}Generating features...", LoggerUtils.tab);
+        LoggerUtils.indent();
 
-        ArrayList<String> features = new ArrayList<>();
         Queue<FeatureTreeNode> queue = new LinkedList<>();
         queue.add(sxfm.getRoot());
 
-        FeatureTreeNode node = queue.remove();
-        while (node != null) {
+        FeatureTreeNode node;
+        while (!queue.isEmpty()) {
+            node = queue.remove();
+
             if ((node instanceof RootNode)
                     || (node instanceof SolitaireFeature)
                     || (node instanceof GroupedFeature)) {
                 String name = node.getName();
+                String id = node.getID();
 
-                if (name.isEmpty())
-                {
-                    throw new ParserException("The feature name could not be blank!");
+                if (name.isEmpty()) {
+                    throw new FeatureModelParserException(node + " - The feature name could not be blank!");
                 }
-                features.add(node.getName());
+                if (id.isEmpty()) {
+                    throw new FeatureModelParserException(node + " - The feature id could not be blank!");
+                }
+                featureModel.addFeature(name, id);
+                log.debug("{}Feature '{}' with id '{}' is being parsed...", LoggerUtils.tab, name, id);
             }
 
-            for( int i = 0 ; i < node.getChildCount() ; i++ ) {
-                FeatureTreeNode child = (FeatureTreeNode) node.getChildAt(i);
-                queue.add(child);
-            }
-
-            if (queue.isEmpty()) {
-                break;
-            } else {
-                node = queue.remove();
-            }
+            exploreChildren(queue, node);
         }
 
-        return features;
+        LoggerUtils.outdent();
+    }
+
+    private void exploreChildren(Queue<FeatureTreeNode> queue, FeatureTreeNode node) {
+        for (int i = 0; i < node.getChildCount(); i++) {
+            FeatureTreeNode child = (FeatureTreeNode) node.getChildAt(i);
+            queue.add(child);
+        }
     }
 
     /**
@@ -172,70 +172,53 @@ public class SXFMParser implements BaseParser {
      *
      * @param sxfm - a {@link fm.FeatureModel}
      * @param featureModel - a {@link FeatureModel}
-     * @throws ParserException a ParserException
+     * @throws FeatureModelParserException a ParserException
      */
-    private void convertRelationships(fm.FeatureModel sxfm, FeatureModel featureModel) throws ParserException {
-        if (sxfm == null) return;
+    private void convertRelationships(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
+        log.debug("{}Generating relationships...", LoggerUtils.tab);
+        LoggerUtils.indent();
 
-        try {
-            Queue<FeatureTreeNode> queue = new LinkedList<>();
-            queue.add(sxfm.getRoot());
+        Queue<FeatureTreeNode> queue = new LinkedList<>();
+        queue.add(sxfm.getRoot());
 
-            FeatureTreeNode node = queue.remove();
-            while (node != null) {
-                String leftSide;
-                ArrayList<String> rightSide;
+        FeatureTreeNode node;
+        while (!queue.isEmpty()) {
+            node = queue.remove();
 
-                if (node instanceof SolitaireFeature) {
-                    if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
-                        leftSide = node.getName();
-                        rightSide = new ArrayList<>();
-                        rightSide.add(((FeatureTreeNode) node.getParent()).getName());
+            Feature leftSide = null;
+            List<Feature> rightSide = new ArrayList<>();
+            RelationshipType type = null;
 
-                        featureModel.addRelationship(Relationship.RelationshipType.OPTIONAL,
-                                leftSide,
-                                rightSide.toArray(new String[0]));
-                    } else { // MANDATORY
-                        leftSide = ((FeatureTreeNode) node.getParent()).getName();
-                        rightSide = new ArrayList<>();
-                        rightSide.add(node.getName());
-
-                        featureModel.addRelationship(Relationship.RelationshipType.MANDATORY,
-                                leftSide,
-                                rightSide.toArray(new String[0]));
-                    }
-                } else if (node instanceof FeatureGroup) {
-                    if (((FeatureGroup) node).getMax() == 1) { // ALTERNATIVE
-                        leftSide = ((FeatureTreeNode) node.getParent()).getName();
-                        rightSide = getChildrenName(node);
-
-                        featureModel.addRelationship(Relationship.RelationshipType.ALTERNATIVE,
-                                leftSide,
-                                rightSide.toArray(new String[0]));
-                    } else { // OR
-                        leftSide = ((FeatureTreeNode) node.getParent()).getName();
-                        rightSide = getChildrenName(node);
-
-                        featureModel.addRelationship(Relationship.RelationshipType.OR,
-                                leftSide,
-                                rightSide.toArray(new String[0]));
-                    }
+            if (node instanceof SolitaireFeature) {
+                if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
+                    type = RelationshipType.OPTIONAL;
+                    leftSide = featureModel.getFeature(node.getID());
+                    rightSide.add(featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID()));
+                } else { // MANDATORY
+                    type = RelationshipType.MANDATORY;
+                    leftSide = featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID());
+                    rightSide.add(featureModel.getFeature(node.getID()));
                 }
+                featureModel.addRelationship(type, leftSide, rightSide);
 
-                for (int i = 0; i < node.getChildCount(); i++) {
-                    FeatureTreeNode child = (FeatureTreeNode) node.getChildAt(i);
-                    queue.add(child);
+                log.debug("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
+            } else if (node instanceof FeatureGroup) {
+                leftSide = featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID());
+                rightSide = getChildren(node);
+                if (((FeatureGroup) node).getMax() == 1) { // ALTERNATIVE
+                    type = RelationshipType.ALTERNATIVE;
+                } else { // OR
+                    type = RelationshipType.OR;
                 }
+                featureModel.addRelationship(type, leftSide, rightSide);
 
-                if (queue.isEmpty()) {
-                    break;
-                } else {
-                    node = queue.remove();
-                }
+                log.debug("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
             }
-        } catch (Exception e) {
-            throw new ParserException("There exists errors in the feature model file!");
+
+            exploreChildren(queue, node);
         }
+
+        LoggerUtils.outdent();
     }
 
     /**
@@ -243,69 +226,65 @@ public class SXFMParser implements BaseParser {
      *
      * @param sxfm - a {@link fm.FeatureModel}
      * @param featureModel - a {@link FeatureModel}
-     * @throws ParserException a ParserException
+     * @throws FeatureModelParserException a ParserException
      */
-    private void convertConstraints(fm.FeatureModel sxfm, FeatureModel featureModel) throws ParserException {
-        if (sxfm == null) return;
+    private void convertConstraints(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
+        log.debug("{}Generating constraints...", LoggerUtils.tab);
+        LoggerUtils.indent();
 
-        try {
-            for (PropositionalFormula formula : sxfm.getConstraints()) {
-                BooleanVariable[] variables = formula.getVariables().toArray(new BooleanVariable[0]);
+        for (PropositionalFormula formula : sxfm.getConstraints()) {
+            BooleanVariable[] variables = formula.getVariables().toArray(new BooleanVariable[0]);
 
-                if (variables.length == 2) {
+            if (variables.length == 2) {
 
-                    BooleanVariable leftSide = variables[0];
-                    BooleanVariable rightSide = variables[1];
+                BooleanVariable leftSide = variables[0];
+                BooleanVariable rightSide = variables[1];
 
-                    // take type
-                    Relationship.RelationshipType type = Relationship.RelationshipType.REQUIRES;
-                    if ((leftSide.isPositive() && !rightSide.isPositive())
-                            || ((!leftSide.isPositive() && rightSide.isPositive()))) { // REQUIRES
-                        type = Relationship.RelationshipType.REQUIRES;
-                    } else if (!leftSide.isPositive() && !rightSide.isPositive()) { // EXCLUDES
-                        type = Relationship.RelationshipType.EXCLUDES;
-                    } else {
-                        throw new ParserException(formula.toString() + " is not supported constraints!");
-                    }
-
-                    String left;
-                    ArrayList<String> rightSideList = new ArrayList<>();
-                    if (!rightSide.isPositive()) {
-                        // take rightSide
-                        left = sxfm.getNodeByID(rightSide.getID()).getName();
-                        rightSideList.add(sxfm.getNodeByID(leftSide.getID()).getName());
-                    } else {
-                        // take leftSide
-                        left = sxfm.getNodeByID(leftSide.getID()).getName();
-                        // take rightSide
-                        rightSideList.add(sxfm.getNodeByID(rightSide.getID()).getName());
-                    }
-
-                    featureModel.addConstraint(type,
-                            left,
-                            rightSideList.toArray(new String[0]));
+                // take type
+                RelationshipType type;
+                if ((leftSide.isPositive() && !rightSide.isPositive())
+                        || ((!leftSide.isPositive() && rightSide.isPositive()))) { // REQUIRES
+                    type = RelationshipType.REQUIRES;
+                } else if (!leftSide.isPositive() && !rightSide.isPositive()) { // EXCLUDES
+                    type = RelationshipType.EXCLUDES;
                 } else {
-                    // take type
-                    Relationship.RelationshipType type = Relationship.RelationshipType.SPECIAL;
-
-                    String constraint3CNF = "";
-                    for (BooleanVariable var : variables) {
-                        if (!var.isPositive()) {
-                            constraint3CNF += "~";
-                        }
-                        constraint3CNF += sxfm.getNodeByID(var.getID()).getName() + " & ";
-                    }
-                    constraint3CNF = constraint3CNF.substring(0, constraint3CNF.length() - 3);
-
-                    featureModel.addConstraint(type,
-                            constraint3CNF);
+                    throw new FeatureModelParserException(formula + " is not supported constraints!");
                 }
+
+                Feature left;
+                List<Feature> rightSideList = new LinkedList<>();
+                if (!rightSide.isPositive()) {
+                    // take rightSide
+                    left = featureModel.getFeature(rightSide.getID());
+                    rightSideList.add(featureModel.getFeature(leftSide.getID()));
+                } else {
+                    // take leftSide
+                    left = featureModel.getFeature(leftSide.getID());
+                    // take rightSide
+                    rightSideList.add(featureModel.getFeature(rightSide.getID()));
+                }
+
+                featureModel.addConstraint(type, left, rightSideList);
+            } else {
+                // take type
+                RelationshipType type = RelationshipType.ThreeCNF;
+
+                StringBuilder constraint3CNF = new StringBuilder();
+                for (BooleanVariable var : variables) {
+                    if (!var.isPositive()) {
+                        constraint3CNF.append("~");
+                    }
+                    constraint3CNF.append(sxfm.getNodeByID(var.getID()).getName()).append(" & ");
+                }
+                constraint3CNF = new StringBuilder(constraint3CNF.substring(0, constraint3CNF.length() - 3));
+
+                featureModel.addConstraint(type, constraint3CNF.toString());
             }
-        } catch (ParserException e) {
-            throw new ParserException(e.getMessage());
-        } catch (Exception e) {
-            throw new ParserException("There exists errors in the feature model file!");
+
+            log.debug("{}Constraint '{}' parsed", LoggerUtils.tab, featureModel.getConstraints().get(featureModel.getNumOfConstraints() - 1).getConfRule());
         }
+
+        LoggerUtils.outdent();
     }
 
     /**
@@ -314,21 +293,20 @@ public class SXFMParser implements BaseParser {
      * @param node - a node {@link FeatureTreeNode}
      * @return an array of names of child features.
      */
-    private ArrayList<String> getChildrenName(FeatureTreeNode node) throws ParserException {
-        if (node == null) return null;
-
-        ArrayList<String> names = new ArrayList<>();
-        for( int i = 0 ; i < node.getChildCount() ; i++ ) {
-            FeatureTreeNode child = (FeatureTreeNode )node.getChildAt(i);
+    private List<Feature> getChildren(FeatureTreeNode node) throws FeatureModelParserException {
+        List<Feature> features = new LinkedList<>();
+        for (int i = 0; i < node.getChildCount(); i++) {
+            FeatureTreeNode child = (FeatureTreeNode)node.getChildAt(i);
 
             String name = child.getName();
-            if (name.isEmpty())
-            {
-                throw new ParserException("The feature name could not be blank!");
+            String id = child.getID();
+            if (name.isEmpty()) {
+                throw new FeatureModelParserException("The feature name could not be blank!");
             }
-            names.add(name);
+            Feature feature = new Feature(name, id);
+            features.add(feature);
         }
-        return names;
+        return features;
     }
 }
 

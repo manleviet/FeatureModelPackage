@@ -8,178 +8,197 @@
 
 package at.tugraz.ist.ase.fm.core;
 
-import at.tugraz.ist.ase.fm.parser.ParserException;
+import at.tugraz.ist.ase.fm.parser.FeatureModelParserException;
 import at.tugraz.ist.ase.fm.parser.SXFMParser;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
-import static org.testng.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FeatureModelTest {
-    private FeatureModel featureModel;
+    static FeatureModel featureModel;
 
-    @org.testng.annotations.BeforeMethod
-    public void setUp() throws ParserException {
+    @BeforeAll
+    static void setUp() throws FeatureModelParserException {
         File fileFM = new File("src/test/resources/FM_10_0.splx");
         SXFMParser parser = new SXFMParser();
         featureModel = parser.parse(fileFM);
     }
 
-    @org.testng.annotations.AfterMethod
-    public void tearDown() {
-    }
+//    @Test
+//    void testAddFeature() {
+//        assertDoesNotThrow(() -> featureModel.addFeature("test", null));
+//    }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetName() {
         assertEquals(featureModel.getName(), "FM_10_0");
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetFeature() throws FeatureModelException {
-        Feature f1 = featureModel.getFeatures().get(4);
+        Feature f1 = featureModel.getBfFeatures().get(4);
 
         Feature f2 = featureModel.getFeature(4);
         Feature f3 = featureModel.getFeature("F3");
 
-        assertEquals(f1, f2);
-        assertEquals(f1, f3);
+        assertAll(() -> assertEquals(f1, f2),
+                () -> assertEquals(f1, f3));
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetNumOfFeatures() {
-        assertEquals(featureModel.getNumOfFeatures(), 9);
+        assertEquals(9, featureModel.getNumOfFeatures());
     }
 
-    @org.testng.annotations.Test
-    public void testIsMandatoryFeature() throws FeatureModelException {
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(0)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(1)));
-        assertTrue(featureModel.isMandatoryFeature(featureModel.getFeature(2)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(3)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(4)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(5)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(6)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(7)));
-        assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(8)));
+    @Test
+    public void testIsMandatoryFeature() {
+        assertAll(() -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(0))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(1))),
+                () -> assertTrue(featureModel.isMandatoryFeature(featureModel.getFeature(2))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(3))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(4))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(5))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(6))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(7))),
+                () -> assertFalse(featureModel.isMandatoryFeature(featureModel.getFeature(8))));
     }
 
-    @org.testng.annotations.Test
-    public void testIsOptionalFeature() throws FeatureModelException {
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(1)));
-        assertFalse(featureModel.isOptionalFeature(featureModel.getFeature(2)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(3)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(4)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(5)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(6)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(7)));
-        assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(8)));
+    @Test
+    public void testIsOptionalFeature() {
+        assertAll(() -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(1))),
+                () -> assertFalse(featureModel.isOptionalFeature(featureModel.getFeature(2))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(3))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(4))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(5))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(6))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(7))),
+                () -> assertTrue(featureModel.isOptionalFeature(featureModel.getFeature(8))));
     }
 
-    @org.testng.annotations.Test
-    public void testGetLeftSideOfRequiresConstraint() {
-    }
-
-    @org.testng.annotations.Test
+//    @Test
+//    public void testGetLeftSideOfRequiresConstraint() {
+//    }
+//
+    @Test
     public void testGetRightSideOfRelationships() throws FeatureModelException {
         Feature f1 = featureModel.getFeature(0);
         Feature f2 = featureModel.getFeature(2);
-        ArrayList<Feature> f1s = featureModel.getRightSideOfRelationships(f1);
-        ArrayList<Feature> f2s = featureModel.getRightSideOfRelationships(f2);
+        List<Feature> f1s = featureModel.getRightSideOfRelationships(f1);
+        List<Feature> f2s = featureModel.getRightSideOfRelationships(f2);
 
-        assertEquals(f1s.get(0).toString(), "F1");
-        assertEquals(f1s.get(1).toString(), "F2");
-        assertEquals(f1s.get(2).toString(), "F3");
-        assertEquals(f1s.get(3).toString(), "F4");
-        assertEquals(f1s.get(4).toString(), "F5");
-        assertEquals(f1s.get(5).toString(), "F6");
-        assertEquals(f1s.get(6).toString(), "F7");
-
-        assertEquals(f2s.get(0).toString(), "F8");
+        assertAll(() -> assertEquals("F1", f1s.get(0).toString()),
+                () -> assertEquals("F2", f1s.get(1).toString()),
+                () -> assertEquals("F3", f1s.get(2).toString()),
+                () -> assertEquals("F4", f1s.get(3).toString()),
+                () -> assertEquals("F5", f1s.get(4).toString()),
+                () -> assertEquals("F6", f1s.get(5).toString()),
+                () -> assertEquals("F7", f1s.get(6).toString()),
+                () -> assertEquals("F8", f2s.get(0).toString()));
     }
 
-    @org.testng.annotations.Test
+    @Test
+    public void testGetRelationshipsWith() {
+        Feature f1 = featureModel.getFeature(1);
+        Feature f2 = featureModel.getFeature(2);
+
+        System.out.println(f1);
+        System.out.println(f2);
+
+        List<Relationship> r1List = featureModel.getRelationshipsWith(f1);
+        List<Relationship> r2List = featureModel.getRelationshipsWith(f2);
+
+        List<Relationship> allRelationships = featureModel.getRelationships();
+        List<Relationship> allConstraints = featureModel.getConstraints();
+
+        assertAll(() -> assertEquals(allRelationships.get(0), r1List.get(0)),
+                () -> assertEquals(allConstraints.get(1), r1List.get(1)),
+                () -> assertEquals(allConstraints.get(2), r1List.get(2)),
+                () -> assertEquals(allRelationships.get(1), r2List.get(0)),
+                () -> assertEquals(allRelationships.get(4), r2List.get(1)));
+    }
+
+    @Test
     public void testGetMandatoryParents() throws FeatureModelException {
         // TODO - 3CNF
-//        Feature f1 = featureModel.getFeature("F6");
-//
-//        ArrayList<Feature> f1s = featureModel.getMandatoryParents(f1);
-//
-//        assertEquals(f1s.size(), 1);
+        Feature f1 = featureModel.getFeature("F6");
+        Feature f2 = featureModel.getFeature("F2");
+
+        List<Feature> featureList = featureModel.getMandatoryParents(f1);
+
+        assertEquals(1, featureList.size());
+        assertEquals(f2, featureList.get(0));
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetMandatoryParent() {
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetRelationshipByConstraint() {
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetNumOfRelationships() {
         assertEquals(featureModel.getNumOfRelationships(), 5);
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetNumOfRelationshipsWithSpecifyType() {
-        assertEquals(featureModel.getNumOfRelationships(Relationship.RelationshipType.MANDATORY), 1);
-        assertEquals(featureModel.getNumOfRelationships(Relationship.RelationshipType.OPTIONAL), 2);
-        assertEquals(featureModel.getNumOfRelationships(Relationship.RelationshipType.ALTERNATIVE), 1);
-        assertEquals(featureModel.getNumOfRelationships(Relationship.RelationshipType.OR), 1);
+        assertAll(() -> assertEquals(1, featureModel.getNumOfRelationships(RelationshipType.MANDATORY)),
+                () -> assertEquals(2, featureModel.getNumOfRelationships(RelationshipType.OPTIONAL)),
+                () -> assertEquals(1, featureModel.getNumOfRelationships(RelationshipType.ALTERNATIVE)),
+                () -> assertEquals(1, featureModel.getNumOfRelationships(RelationshipType.OR)));
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetConstraints() {
-        ArrayList<Relationship> constraints = featureModel.getConstraints();
+        List<Relationship> constraints = featureModel.getConstraints();
 
-        assertEquals(constraints.get(0).getType(),
-                Relationship.RelationshipType.REQUIRES);
-        assertEquals(constraints.get(1).getType(),
-                Relationship.RelationshipType.EXCLUDES);
-        assertEquals(constraints.get(2).getType(),
-                Relationship.RelationshipType.SPECIAL);
+        assertAll(() -> assertEquals(RelationshipType.REQUIRES, constraints.get(0).getType()),
+                () -> assertEquals(RelationshipType.EXCLUDES, constraints.get(1).getType()),
+                () -> assertEquals(RelationshipType.ThreeCNF, constraints.get(2).getType()),
 
-        assertEquals(constraints.get(0).getConfRule(),
-                "requires(F8, F6)");
-        assertEquals(constraints.get(1).getConfRule(),
-                "excludes(F4, F1)");
-        assertEquals(constraints.get(2).getConfRule(),
-                "3cnf(~F1, F7, F8)");
+                () -> assertEquals("requires(F8, F6)", constraints.get(0).getConfRule()),
+                () -> assertEquals("excludes(F4, F1)", constraints.get(1).getConfRule()),
+                () -> assertEquals("3cnf(~F1, F7, F8)", constraints.get(2).getConfRule()),
+
+                () -> assertEquals(constraints.get(0), constraints.get(0)));
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetNumOfConstraints() {
-        assertEquals(featureModel.getNumOfConstraints(), 3);
+        assertEquals(4, featureModel.getNumOfConstraints());
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testTestToString() {
-        StringBuilder st = new StringBuilder();
 
-        st.append("FEATURES:\n");
-        st.append(String.format("\t%s\n", "FM_10_0"));
-        st.append(String.format("\t%s\n", "F1"));
-        st.append(String.format("\t%s\n", "F2"));
-        st.append(String.format("\t%s\n", "F8"));
-        st.append(String.format("\t%s\n", "F3"));
-        st.append(String.format("\t%s\n", "F4"));
-        st.append(String.format("\t%s\n", "F5"));
-        st.append(String.format("\t%s\n", "F6"));
-        st.append(String.format("\t%s\n", "F7"));
+        String st = "FEATURES:\n" +
+                String.format("\t%s\n", "FM_10_0") +
+                String.format("\t%s\n", "F1") +
+                String.format("\t%s\n", "F2") +
+                String.format("\t%s\n", "F8") +
+                String.format("\t%s\n", "F3") +
+                String.format("\t%s\n", "F4") +
+                String.format("\t%s\n", "F5") +
+                String.format("\t%s\n", "F6") +
+                String.format("\t%s\n", "F7") +
+                "RELATIONSHIPS:\n" +
+                String.format("\t%s\n", "optional(F1, FM_10_0)") +
+                String.format("\t%s\n", "mandatory(FM_10_0, F2)") +
+                String.format("\t%s\n", "or(FM_10_0, F3, F4, F5)") +
+                String.format("\t%s\n", "alternative(FM_10_0, F6, F7)") +
+                String.format("\t%s\n", "optional(F8, F2)") +
+                "CONSTRAINTS:\n" +
+                String.format("\t%s\n", "requires(F8, F6)") +
+                String.format("\t%s\n", "excludes(F4, F1)") +
+                String.format("\t%s\n", "3cnf(~F1, F7, F8)") +
+                String.format("\t%s\n", "requires(F2, F6)");
 
-        st.append("RELATIONSHIPS:\n");
-        st.append(String.format("\t%s\n", "optional(F1, FM_10_0)"));
-        st.append(String.format("\t%s\n", "mandatory(FM_10_0, F2)"));
-        st.append(String.format("\t%s\n", "or(FM_10_0, F3, F4, F5)"));
-        st.append(String.format("\t%s\n", "alternative(FM_10_0, F6, F7)"));
-        st.append(String.format("\t%s\n", "optional(F8, F2)"));
-
-        st.append("CONSTRAINTS:\n");
-        st.append(String.format("\t%s\n", "requires(F8, F6)"));
-        st.append(String.format("\t%s\n", "excludes(F4, F1)"));
-        st.append(String.format("\t%s\n", "3cnf(~F1, F7, F8)"));
-
-        assertEquals(st.toString(), featureModel.toString());
+        assertEquals(st, featureModel.toString());
     }
 }
