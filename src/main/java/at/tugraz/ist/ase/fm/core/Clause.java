@@ -9,6 +9,7 @@
 package at.tugraz.ist.ase.fm.core;
 
 import at.tugraz.ist.ase.common.LoggerUtils;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -35,6 +36,7 @@ public class Clause {
      * Constructor
      * @param clause in one of two forms: 1) A (i.e., A = true) or 2) ~A (i.e., A = false)
      */
+    @Builder
     public Clause(@NonNull String clause) {
         log.debug("{}Creating clause for '{}'", LoggerUtils.tab, clause);
 

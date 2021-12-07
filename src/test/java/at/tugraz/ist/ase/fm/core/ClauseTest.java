@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClauseTest {
 
     @Test
-    public void testClause() {
+    void testClause() {
         Clause c1 = new Clause("A");
         Clause c2 = new Clause("~A");
         Clause c3 = new Clause("A");
@@ -28,6 +28,25 @@ class ClauseTest {
                 () -> assertFalse(c2.isPositive()),
                 () -> assertEquals("~A", c2.getClause()),
                 () -> assertEquals(c1, c3),
+                () -> assertNotEquals(c1, c2));
+    }
+
+    @Test
+    void testBuilder() {
+        Clause c1 = Clause.builder()
+                .clause("A")
+                .build();
+        Clause c2 = Clause.builder()
+                .clause("~A")
+                .build();
+
+        assertAll(() -> assertEquals("A = true", c1.toString()),
+                () -> assertEquals("A", c1.getLiteral()),
+                () -> assertTrue(c1.isPositive()),
+                () -> assertEquals("A", c1.getClause()),
+                () -> assertEquals("A = false", c2.toString()),
+                () -> assertFalse(c2.isPositive()),
+                () -> assertEquals("~A", c2.getClause()),
                 () -> assertNotEquals(c1, c2));
     }
 }

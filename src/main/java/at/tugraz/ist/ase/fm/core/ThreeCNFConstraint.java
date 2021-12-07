@@ -8,6 +8,7 @@
 
 package at.tugraz.ist.ase.fm.core;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -29,6 +30,7 @@ public class ThreeCNFConstraint extends Relationship {
      * @param type type of constraint
      * @param constraint3CNF a 3CNF constraint.
      */
+    @Builder
     public ThreeCNFConstraint(RelationshipType type, @NonNull String constraint3CNF) {
         super(type);
 

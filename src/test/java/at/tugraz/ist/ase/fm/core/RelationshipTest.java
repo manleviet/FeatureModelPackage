@@ -125,4 +125,26 @@ class RelationshipTest {
         assertAll(() -> assertTrue(optionalRelationship.presentAtRightSide(f2)),
                 () -> assertFalse(optionalRelationship.presentAtRightSide(f1)));
     }
+
+    @Test
+    void testBasicRelationshipBuilder() {
+        Relationship r = BasicRelationship.builder()
+                .type(RelationshipType.MANDATORY)
+                .leftSide(f1)
+                .rightSide( Collections.singletonList(f2))
+                .build();
+
+        Relationship r1 = ThreeCNFConstraint.builder()
+                .type(RelationshipType.ThreeCNF)
+                .constraint3CNF("F1 & ~F2")
+                .build();
+
+        assertAll(() -> assertNotNull(r),
+                () -> assertEquals(RelationshipType.MANDATORY, r.getType()),
+                () -> assertEquals(f1, ((BasicRelationship) r).getLeftSide()),
+                () -> assertEquals(f2, ((BasicRelationship) r).getRightSide().get(0)),
+                () -> assertEquals(1, ((BasicRelationship) r).getRightSide().size()),
+                () -> assertEquals("mandatory(F1, F2)", r.getConfRule()),
+                () -> assertEquals("3cnf(F1, ~F2)", r1.getConfRule()));
+    }
 }
