@@ -8,6 +8,7 @@
 
 package at.tugraz.ist.ase.fm.core;
 
+import at.tugraz.ist.ase.common.LoggerUtils;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -55,6 +56,8 @@ public class FeatureModel {
 
         Feature f = new Feature(fname, id);
         this.bfFeatures.add(f);
+
+        log.trace("{}Added feature {}", LoggerUtils.tab, fname);
     }
 
     private boolean isUniqueFeature(String fname) {
@@ -287,6 +290,8 @@ public class FeatureModel {
     public void addRelationship(RelationshipType type, @NonNull Feature leftSide, @NonNull List<Feature> rightSide) {
         Relationship r = new BasicRelationship(type, leftSide, rightSide);
         this.relationships.add(r);
+
+        log.trace("{}Added relationship: {}", LoggerUtils.tab, r);
     }
 
 //    /**
@@ -337,6 +342,8 @@ public class FeatureModel {
     public void addConstraint(RelationshipType type, @NonNull Feature leftSide, @NonNull List<Feature> rightSide) {
         Relationship r = new BasicRelationship(type, leftSide, rightSide);
         this.constraints.add(r);
+
+        log.trace("{}Added constraint: {}", LoggerUtils.tab, r);
     }
 
     /**
@@ -347,6 +354,8 @@ public class FeatureModel {
     public void addConstraint(RelationshipType type, String constraint3CNF) {
         Relationship r = new ThreeCNFConstraint(type, constraint3CNF);
         this.constraints.add(r);
+
+        log.trace("{}Added constraint: {}", LoggerUtils.tab, r);
     }
 
     /**

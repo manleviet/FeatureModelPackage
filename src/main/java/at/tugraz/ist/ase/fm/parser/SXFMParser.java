@@ -87,7 +87,7 @@ public class SXFMParser implements FeatureModelParser {
     public FeatureModel parse(@NonNull File filePath) throws FeatureModelParserException {
         checkArgument(checkFormat(filePath), "The format of file is not SPLOT format or there exists errors in the file!");
 
-        log.info("Parsing the feature model file {}", filePath.getName());
+        log.debug("{}Parsing the feature model file {} >>>", LoggerUtils.tab, filePath.getName());
         LoggerUtils.indent();
 
         FeatureModel featureModel;
@@ -118,7 +118,7 @@ public class SXFMParser implements FeatureModelParser {
         }
 
         LoggerUtils.outdent();
-        log.info("Parsing the feature model file {} is done!", filePath.getName());
+        log.debug("<<< {}Parsing the feature model file {} is done!", LoggerUtils.tab, filePath.getName());
         return featureModel;
     }
 
@@ -128,7 +128,7 @@ public class SXFMParser implements FeatureModelParser {
      * @param sxfm - a {@link fm.FeatureModel}
      */
     private void convertFeatures(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException {
-        log.debug("{}Generating features...", LoggerUtils.tab);
+        log.trace("{}Generating features...", LoggerUtils.tab);
         LoggerUtils.indent();
 
         Queue<FeatureTreeNode> queue = new LinkedList<>();
@@ -151,7 +151,7 @@ public class SXFMParser implements FeatureModelParser {
                     throw new FeatureModelParserException(node + " - The feature id could not be blank!");
                 }
                 featureModel.addFeature(name, id);
-                log.debug("{}Feature '{}' with id '{}' is being parsed...", LoggerUtils.tab, name, id);
+                log.trace("{}Feature '{}' with id '{}' is being parsed...", LoggerUtils.tab, name, id);
             }
 
             exploreChildren(queue, node);
@@ -175,7 +175,7 @@ public class SXFMParser implements FeatureModelParser {
      * @throws FeatureModelParserException a ParserException
      */
     private void convertRelationships(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
-        log.debug("{}Generating relationships...", LoggerUtils.tab);
+        log.trace("{}Generating relationships...", LoggerUtils.tab);
         LoggerUtils.indent();
 
         Queue<FeatureTreeNode> queue = new LinkedList<>();
@@ -201,7 +201,7 @@ public class SXFMParser implements FeatureModelParser {
                 }
                 featureModel.addRelationship(type, leftSide, rightSide);
 
-                log.debug("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
+                log.trace("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
             } else if (node instanceof FeatureGroup) {
                 leftSide = featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID());
                 rightSide = getChildren(node);
@@ -212,7 +212,7 @@ public class SXFMParser implements FeatureModelParser {
                 }
                 featureModel.addRelationship(type, leftSide, rightSide);
 
-                log.debug("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
+                log.trace("{}Relationship '{}' parsed", LoggerUtils.tab, featureModel.getRelationships().get(featureModel.getNumOfRelationships() - 1).getConfRule());
             }
 
             exploreChildren(queue, node);
@@ -229,7 +229,7 @@ public class SXFMParser implements FeatureModelParser {
      * @throws FeatureModelParserException a ParserException
      */
     private void convertConstraints(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
-        log.debug("{}Generating constraints...", LoggerUtils.tab);
+        log.trace("{}Generating constraints...", LoggerUtils.tab);
         LoggerUtils.indent();
 
         for (PropositionalFormula formula : sxfm.getConstraints()) {
@@ -281,7 +281,7 @@ public class SXFMParser implements FeatureModelParser {
                 featureModel.addConstraint(type, constraint3CNF.toString());
             }
 
-            log.debug("{}Constraint '{}' parsed", LoggerUtils.tab, featureModel.getConstraints().get(featureModel.getNumOfConstraints() - 1).getConfRule());
+            log.trace("{}Constraint '{}' parsed", LoggerUtils.tab, featureModel.getConstraints().get(featureModel.getNumOfConstraints() - 1).getConfRule());
         }
 
         LoggerUtils.outdent();

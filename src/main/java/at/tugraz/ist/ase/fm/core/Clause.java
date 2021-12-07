@@ -38,8 +38,6 @@ public class Clause {
      */
     @Builder
     public Clause(@NonNull String clause) {
-        log.debug("{}Creating clause for '{}'", LoggerUtils.tab, clause);
-
         if (clause.startsWith("~")) {
             positive = false;
             literal = clause.substring(1);
@@ -48,7 +46,7 @@ public class Clause {
             literal = clause;
         }
 
-        log.debug("{}Clause for '{}' created", LoggerUtils.tab, this);
+        log.trace("{}Added clause for '{}'", LoggerUtils.tab, this);
     }
 
     public String getClause() {
