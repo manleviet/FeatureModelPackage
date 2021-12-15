@@ -50,9 +50,11 @@ public class FeatureModel {
      * Adds a new feature
      * @param fname name of the feature
      */
-    public void addFeature(@NonNull String fname, String id) {
+    public void addFeature(@NonNull String fname, @NonNull String id) {
         checkArgument(!fname.isEmpty(), "Feature name cannot be empty!");
-        checkArgument(isUniqueFeature(fname), "Feature's name " + fname + " already exists!");
+        checkArgument(!id.isEmpty(), "Feature id cannot be empty!");
+        checkArgument(isUniqueFeatureName(fname), "Feature's name " + fname + " already exists!");
+        checkArgument(isUniqueFeatureId(id), "Feature's id " + id + " already exists!");
 
         Feature f = new Feature(fname, id);
         this.bfFeatures.add(f);
@@ -60,9 +62,18 @@ public class FeatureModel {
         log.trace("{}Added feature {}", LoggerUtils.tab, fname);
     }
 
-    private boolean isUniqueFeature(String fname) {
+    private boolean isUniqueFeatureName(String fname) {
         for (Feature f: bfFeatures) {
             if (f.isNameDuplicate(fname)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isUniqueFeatureId(String id) {
+        for (Feature f: bfFeatures) {
+            if (f.isIdDuplicate(id)) {
                 return false;
             }
         }

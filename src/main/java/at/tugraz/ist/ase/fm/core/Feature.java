@@ -27,12 +27,9 @@ public class Feature {
     /**
      * ID of feature
      */
-    private String id;
+    private @NonNull String id;
 
     public boolean isIdDuplicate(@NonNull String id) {
-        if (this.id == null) {
-            return false;
-        }
         return this.id.equals(id);
     }
 

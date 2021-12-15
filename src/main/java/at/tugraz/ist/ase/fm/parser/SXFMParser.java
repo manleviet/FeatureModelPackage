@@ -128,7 +128,7 @@ public class SXFMParser implements FeatureModelParser {
      *
      * @param sxfm - a {@link fm.FeatureModel}
      */
-    private void convertFeatures(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException {
+    private void convertFeatures(fm.FeatureModel sxfm, FeatureModel featureModel) {
         log.trace("{}Generating features...", LoggerUtils.tab);
         LoggerUtils.indent();
 
@@ -145,12 +145,6 @@ public class SXFMParser implements FeatureModelParser {
                 String name = node.getName();
                 String id = node.getID();
 
-                if (name.isEmpty()) {
-                    throw new FeatureModelParserException(node + " - The feature name could not be blank!");
-                }
-                if (id.isEmpty()) {
-                    throw new FeatureModelParserException(node + " - The feature id could not be blank!");
-                }
                 featureModel.addFeature(name, id);
                 log.trace("{}Feature '{}' with id '{}' is being parsed...", LoggerUtils.tab, name, id);
             }
