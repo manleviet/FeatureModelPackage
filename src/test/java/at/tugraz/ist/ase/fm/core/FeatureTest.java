@@ -32,7 +32,7 @@ class FeatureTest {
     @Test
     public void testException() {
         assertAll(() -> assertThrows(NullPointerException.class, () -> new Feature(null, null)),
-                () -> assertDoesNotThrow(() -> new Feature("f", null)));
+                () -> assertThrows(NullPointerException.class, () -> new Feature("f", null)));
     }
 
     @Test
