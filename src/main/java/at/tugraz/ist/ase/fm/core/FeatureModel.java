@@ -82,18 +82,18 @@ public class FeatureModel {
 
     /**
      * Gets the {@link Feature} which has a given name.
-     * @param name id of the feature
+     * @param id id of the feature
      * @return a {@link Feature}
      */
-    public Feature getFeature(@NonNull String name) throws FeatureModelException {
-        checkArgument(!name.isEmpty(), "Feature name cannot be empty!");
+    public Feature getFeature(@NonNull String id) throws FeatureModelException {
+        checkArgument(!id.isEmpty(), "Feature name cannot be empty!");
 
         for (Feature f: bfFeatures) {
-            if (f.isNameDuplicate(name)) {
+            if (f.isIdDuplicate(id)) {
                 return f;
             }
         }
-        throw new FeatureModelException("Feature '" + name + "' doesn't exist!");
+        throw new FeatureModelException("Feature '" + id + "' doesn't exist!");
     }
 
     /**

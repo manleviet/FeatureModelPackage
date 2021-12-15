@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -269,16 +270,17 @@ public class SXFMParser implements FeatureModelParser {
                 // take type
                 RelationshipType type = RelationshipType.ThreeCNF;
 
-                StringBuilder constraint3CNF = new StringBuilder();
-                for (BooleanVariable var : variables) {
-                    if (!var.isPositive()) {
-                        constraint3CNF.append("~");
-                    }
-                    constraint3CNF.append(sxfm.getNodeByID(var.getID()).getName()).append(" & ");
-                }
-                constraint3CNF = new StringBuilder(constraint3CNF.substring(0, constraint3CNF.length() - 3));
+                List<String> threecnf_constraints = new LinkedList<>();
 
-                featureModel.addConstraint(type, constraint3CNF.toString());
+                for (BooleanVariable variable : variables) {
+                    if (variable.isPositive()) {
+                        threecnf_constraints.add(sxfm.getNodeByID(variable.getID()).getName());
+                    } else {
+                        threecnf_constraints.add("~" + sxfm.getNodeByID(variable.getID()).getName());
+                    }
+                }
+
+                featureModel.addConstraint(type, String.join(" & ", threecnf_constraints));
             }
 
             log.trace("{}Constraint '{}' parsed", LoggerUtils.tab, featureModel.getConstraints().get(featureModel.getNumOfConstraints() - 1).getConfRule());

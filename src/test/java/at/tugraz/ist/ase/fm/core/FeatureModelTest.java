@@ -201,4 +201,42 @@ public class FeatureModelTest {
 
         assertEquals(st, featureModel.toString());
     }
+
+    @Test
+    void testSmartwatch() throws FeatureModelParserException {
+        File fileFM = new File("src/test/resources/smartwatch.sxfm");
+        SXFMParser parser = new SXFMParser();
+        FeatureModel featureModel = parser.parse(fileFM);
+
+        String st = "FEATURES:\n" +
+                String.format("\t%s\n", "Smartwatch") +
+                String.format("\t%s\n", "Connector") +
+                String.format("\t%s\n", "Screen") +
+                String.format("\t%s\n", "Camera") +
+                String.format("\t%s\n", "Compass") +
+                String.format("\t%s\n", "GPS") +
+                String.format("\t%s\n", "Cellular") +
+                String.format("\t%s\n", "Wifi") +
+                String.format("\t%s\n", "Bluetooth") +
+                String.format("\t%s\n", "Analog") +
+                String.format("\t%s\n", "High Resolution") +
+                String.format("\t%s\n", "E-ink") +
+                "RELATIONSHIPS:\n" +
+                String.format("\t%s\n", "mandatory(Smartwatch, Connector)") +
+                String.format("\t%s\n", "mandatory(Smartwatch, Screen)") +
+                String.format("\t%s\n", "optional(Camera, Smartwatch)") +
+                String.format("\t%s\n", "optional(Compass, Smartwatch)") +
+                String.format("\t%s\n", "or(Connector, GPS, Cellular, Wifi, Bluetooth)") +
+                String.format("\t%s\n", "alternative(Screen, Analog, High Resolution, E-ink)") +
+                "CONSTRAINTS:\n" +
+                String.format("\t%s\n", "requires(Camera, High Resolution)") +
+                String.format("\t%s\n", "requires(Compass, GPS)") +
+                String.format("\t%s\n", "excludes(Cellular, Analog)") +
+                String.format("\t%s\n", "3cnf(~Analog, Cellular, Wifi)");
+
+        assertAll(() -> assertEquals(12, featureModel.getNumOfFeatures()),
+                () -> assertEquals(6, featureModel.getNumOfRelationships()),
+                () -> assertEquals(4, featureModel.getNumOfConstraints()),
+                () -> assertEquals(st, featureModel.toString()));
+    }
 }
