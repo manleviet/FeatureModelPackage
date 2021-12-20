@@ -8,8 +8,8 @@
 
 <configuration scan="true">
 
-    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%5p) ${sys:PID} --- [%15.15t] %cyan(%-40.40logger{1.}) : %m%n"/>
-    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p ${sys:PID} --- [%15.15t] %-40.40logger{1.} : %m%n"/>
+    <property name="CONSOLE_LOG_PATTERN" value="%-55(%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%5level) [%t]) %cyan(%-40.40logger{1.}) : %m%n"/>
+    <property name="FILE_LOG_PATTERN" value="%-55(%d{yyyy-MM-dd HH:mm:ss.SSS} %5level [%t]) %-40.40logger{1.} : %m%n"/>
 
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
@@ -25,9 +25,9 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
             <fileNamePattern>logs-%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
-            <!-- each file should be at most 10MB, keep 30 days worth of history, but at most 1GB -->
-            <maxFileSize>12MB</maxFileSize>
-            <maxHistory>30</maxHistory>
+            <!-- each file should be at most 10MB, keep 7 days worth of history, but at most 1GB -->
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
@@ -35,7 +35,7 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <root level="trace">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="ROLLING" />
     </root>

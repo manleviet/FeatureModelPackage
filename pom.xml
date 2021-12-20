@@ -6,7 +6,7 @@
 
     <groupId>at.tugraz.ist.ase</groupId>
     <artifactId>fm</artifactId>
-    <version>1.1.5-test</version>
+    <version>1.1.8-dev</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>at.tugraz.ist.ase</groupId>
             <artifactId>common</artifactId>
-            <version>1.1.4-test</version>
+            <version>1.1.12-dev</version>
         </dependency>
 
         <dependency>
