@@ -1,7 +1,7 @@
 /*
  * at.tugraz.ist.ase.fm - A Maven package for feature models
  *
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2022
  *
  * @author: Viet-Man Le (vietman.le@ist.tugraz.at)
  */
@@ -28,8 +28,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Getter
 public class BasicRelationship extends Relationship {
-    private Feature leftSide;
-    private List<Feature> rightSide;
+    private final Feature leftSide;
+    private final List<Feature> rightSide;
 
     /**
      * A constructor

@@ -1,7 +1,7 @@
 /*
  * at.tugraz.ist.ase.fm - A Maven package for feature models
  *
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2022
  *
  * @author: Viet-Man Le (vietman.le@ist.tugraz.at)
  */
