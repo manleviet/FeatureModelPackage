@@ -15,8 +15,6 @@ import java.io.File;
 
 /**
  * An interface for all feature model parsers
- *
- * @author Viet-Man Le (vietman.le@ist.tugraz.at)
  */
 public interface FeatureModelParser {
     /**
