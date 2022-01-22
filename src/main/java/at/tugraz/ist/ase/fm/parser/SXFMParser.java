@@ -26,11 +26,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -86,7 +84,7 @@ public class SXFMParser implements FeatureModelParser {
      */
     @Override
     public FeatureModel parse(@NonNull File filePath) throws FeatureModelParserException {
-        checkArgument(checkFormat(filePath), "The format of file is not SPLOT format or there exists errors in the file!");
+        checkArgument(checkFormat(filePath), "The format of file is not SPLOT format or there are errors in the file!");
 
         log.trace("{}Parsing the feature model file [file={}] >>>", LoggerUtils.tab, filePath.getName());
         LoggerUtils.indent();
@@ -179,9 +177,9 @@ public class SXFMParser implements FeatureModelParser {
         while (!queue.isEmpty()) {
             node = queue.remove();
 
-            Feature leftSide = null;
-            List<Feature> rightSide = new ArrayList<>();
-            RelationshipType type = null;
+            Feature leftSide;
+            List<Feature> rightSide = new LinkedList<>();
+            RelationshipType type;
 
             if (node instanceof SolitaireFeature) {
                 if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
@@ -241,18 +239,9 @@ public class SXFMParser implements FeatureModelParser {
                     throw new FeatureModelParserException(formula + " is not supported constraints!");
                 }
 
-                Feature left;
+                Feature left = featureModel.getFeature(leftSide.getID());
                 List<Feature> rightSideList = new LinkedList<>();
-                if (!rightSide.isPositive()) {
-                    // take rightSide
-                    left = featureModel.getFeature(rightSide.getID());
-                    rightSideList.add(featureModel.getFeature(leftSide.getID()));
-                } else {
-                    // take leftSide
-                    left = featureModel.getFeature(leftSide.getID());
-                    // take rightSide
-                    rightSideList.add(featureModel.getFeature(rightSide.getID()));
-                }
+                rightSideList.add(featureModel.getFeature(rightSide.getID()));
 
                 featureModel.addConstraint(type, left, rightSideList);
             } else {
@@ -289,7 +278,7 @@ public class SXFMParser implements FeatureModelParser {
             String name = child.getName();
             String id = child.getID();
             if (name.isEmpty()) {
-                throw new FeatureModelParserException("The feature name could not be blank!");
+                throw new FeatureModelParserException("The feature name could not be blank! [" + child + "]");
             }
             Feature feature = new Feature(name, id);
             features.add(feature);
