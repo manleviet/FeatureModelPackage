@@ -315,7 +315,7 @@ public class FeatureIDEParser implements FeatureModelParser {
                     rightSideList.add(fm.getFeature(n1.item(3).getChildNodes().item(1).getTextContent()));
                     type = RelationshipType.EXCLUDES;
                 }
-                default -> throw new FeatureModelParserException(n.getNodeName() + " is an wrong name for constraints!");
+                default -> throw new FeatureModelParserException("Unexpected constraint type: " + n.getNodeName());
             }
 
             fm.addConstraint(type, left, rightSideList);
