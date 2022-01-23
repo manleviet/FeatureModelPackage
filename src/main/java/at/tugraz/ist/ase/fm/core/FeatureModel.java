@@ -1,74 +1,79 @@
 /*
  * at.tugraz.ist.ase.fm - A Maven package for feature models
  *
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2022
  *
  * @author: Viet-Man Le (vietman.le@ist.tugraz.at)
  */
 
 package at.tugraz.ist.ase.fm.core;
 
-import java.util.ArrayList;
+import at.tugraz.ist.ase.common.LoggerUtils;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-import static at.tugraz.ist.ase.fm.core.Utilities.isExistInArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Represents a feature model
  * ver 1.0 - support basic feature models
- *
- * @author Viet-Man Le (vietman.le@ist.tugraz.at)
  */
+@Slf4j
+@Getter
 public class FeatureModel {
-    public final String version = "1.0"; // support basic feature models
+    @Setter
+    private String name;
 
-    private ArrayList<Feature> bfFeatures; // breadth-first order
-    private ArrayList<Relationship> relationships;
-    private ArrayList<Relationship> constraints;
+    private final List<Feature> bfFeatures; // breadth-first order
+    private final List<Relationship> relationships;
+    private final List<Relationship> constraints;
 
+    @Setter
     private boolean consistency;
 
     /**
      * A constructor
      */
     public FeatureModel() {
-        bfFeatures = new ArrayList<Feature>();
-        relationships = new ArrayList<Relationship>();
-        constraints = new ArrayList<Relationship>();
+        bfFeatures = new LinkedList<>();
+        relationships = new LinkedList<>();
+        constraints = new LinkedList<>();
         consistency = false;
     }
 
     /**
-     * Sets the consistency
-     * @param consistency of this feature model
+     * Adds a new feature
+     * @param fname name of the feature
      */
-    public void setConsistency(boolean consistency) {
-        this.consistency = consistency;
+    public void addFeature(@NonNull String fname, @NonNull String id) {
+        checkArgument(!fname.isEmpty(), "Feature name cannot be empty!");
+        checkArgument(!id.isEmpty(), "Feature id cannot be empty!");
+        checkArgument(isUniqueFeatureName(fname), "Feature's name " + fname + " already exists!");
+        checkArgument(isUniqueFeatureId(id), "Feature's id " + id + " already exists!");
+
+        Feature f = new Feature(fname, id);
+        this.bfFeatures.add(f);
+
+        log.trace("{}Added feature [feature={}]", LoggerUtils.tab, f);
     }
 
-    /**
-     * Gets the consistency of this feature model
-     * @return true if the feature model is consistent, false otherwise
-     */
-    public boolean isConsistency() {
-        return consistency;
+    private boolean isUniqueFeatureName(String fname) {
+        for (Feature f: bfFeatures) {
+            if (f.isNameDuplicate(fname)) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    /**
-     * Gets the name of the feature model. This name is also the root feature's name.
-     * @return name of the feature model.
-     */
-    public String getName() {
-        return bfFeatures.get(0).getName();
-    }
-
-    /**
-     * Checks whether a given name is different from other feature names.
-     * @param name
-     * @return true if the given name is unique, false otherwise
-     */
-    private boolean isUniqueFeatureName(String name) {
-        for (Feature f: bfFeatures) { // TODO - improve the performance
-            if (f.getName().equals(name)) {
+    private boolean isUniqueFeatureId(String id) {
+        for (Feature f: bfFeatures) {
+            if (f.isIdDuplicate(id)) {
                 return false;
             }
         }
@@ -76,72 +81,30 @@ public class FeatureModel {
     }
 
     /**
-     * Adds a new feature
-     * @param fname name of the feature
-     * @throws FeatureModelException
-     */
-    public void addFeature(String fname) throws FeatureModelException {
-        // Checks blank fname
-        if (fname.isEmpty()) {
-            throw new FeatureModelException("The feature name can't be blank.");
-        }
-
-        // Checks the existence of fname in the feature model
-        if (!isUniqueFeatureName(fname)) {
-            StringBuilder st = new StringBuilder("The feature name " + fname.toUpperCase() + " is used many times in the feature model.");
-            st.append("\n\n").append("The feature name must be unique.");
-
-            throw new FeatureModelException(st.toString());
-        }
-
-        Feature f = new Feature(fname);
-        this.bfFeatures.add(f);
-    }
-
-    /**
-     * Adds multiple features
-     * @param fnames an array of feature's names
-     * @throws FeatureModelException
-     */
-    public void addFeatures(String[] fnames) throws FeatureModelException {
-        for (String fname: fnames) {
-            addFeature(fname);
-        }
-    }
-
-    /**
-     * Gets all {@link Feature}s of the feature model.
-     * @return an array of {@link Feature}s.
-     */
-    public ArrayList<Feature> getFeatures(){
-        return bfFeatures;
-    }
-
-    /**
      * Gets the {@link Feature} at a given index.
-     * @param index
+     * @param index index of the feature
      * @return a {@link Feature}
-     * @throws FeatureModelException
      */
-    public Feature getFeature(int index) throws FeatureModelException {
-        if (index < 0 || index >= bfFeatures.size()) throw new FeatureModelException("The index is out of bounds!");
+    public Feature getFeature(int index) {
+        checkArgument(index >= 0 && index < bfFeatures.size(), "Index out of bound!");
 
         return bfFeatures.get(index);
     }
 
     /**
      * Gets the {@link Feature} which has a given name.
-     * @param name
+     * @param id id of the feature
      * @return a {@link Feature}
-     * @throws FeatureModelException
      */
-    public Feature getFeature(String name) throws FeatureModelException {
+    public Feature getFeature(@NonNull String id) throws FeatureModelException {
+        checkArgument(!id.isEmpty(), "Feature name cannot be empty!");
+
         for (Feature f: bfFeatures) {
-            if (f.getName().equals(name)) {
+            if (f.isIdDuplicate(id)) {
                 return f;
             }
         }
-        throw new FeatureModelException("Feature " + name + "doesn't exist!");
+        throw new FeatureModelException("Feature '" + id + "' doesn't exist!");
     }
 
     /**
@@ -157,14 +120,12 @@ public class FeatureModel {
      * @param feature a {@link Feature}
      * @return true if the given {@link Feature} is mandatory, false otherwise.
      */
-    public boolean isMandatoryFeature(Feature feature) {
+    public boolean isMandatoryFeature(@NonNull Feature feature) {
         for (Relationship r : relationships) {
-            switch (r.getType()) {
-                case MANDATORY:
-                    if (r.belongsToRightSide(feature)) {
-                        return true;
-                    }
-                    break;
+            if (r.getType() == RelationshipType.MANDATORY) {
+                if (r.presentAtRightSide(feature)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -175,48 +136,43 @@ public class FeatureModel {
      * @param feature a {@link Feature}
      * @return true if the given {@link Feature} is optional, false otherwise.
      */
-    public boolean isOptionalFeature(Feature feature) {
+    public boolean isOptionalFeature(@NonNull Feature feature) {
         for (Relationship r : relationships) {
-            switch (r.getType()) {
-                case OPTIONAL:
-                    if (r.belongsToLeftSide(feature)) {
-                        return true;
-                    }
-                    break;
-                case OR:
-                case ALTERNATIVE:
-                    if (r.belongsToRightSide(feature)) {
-                        return true;
-                    }
-                    break;
+            if (r.getType() == RelationshipType.OPTIONAL) {
+                if (r.presentAtLeftSide(feature)) {
+                    return true;
+                }
+            } else if (r.getType() == RelationshipType.OR || r.getType() == RelationshipType.ALTERNATIVE) {
+                if (r.presentAtRightSide(feature)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
     /**
-     * Gets all {@link Feature}s participating in the right side of the constraint
+     * Gets all {@link Feature}s participating on the right side of the constraint
      * in which the left side is the given {@link Feature}.
-     * @param leftSide
+     * @param leftSide a {@link Feature}
      * @return an array of {@link Feature}s
-     * @throws FeatureModelException
      */
-    public ArrayList<Feature> getRightSideOfRelationships(Feature leftSide) throws FeatureModelException {
-        ArrayList<Feature> children = new ArrayList<>();
+    public List<Feature> getRightSideOfRelationships(@NonNull Feature leftSide) throws FeatureModelException {
+        List<Feature> children = new LinkedList<>();
         for (Relationship r : relationships) {
-            if (r.getType() == Relationship.RelationshipType.OPTIONAL) {
-                if (r.belongsToRightSide(leftSide)) {
-                    String left = r.getLeftSide();
-                    Feature parent = getFeature(left);
+            if (r.getType() == RelationshipType.OPTIONAL) {
+                if (r.presentAtRightSide(leftSide)) {
+                    Feature left = ((BasicRelationship) r).getLeftSide();
+                    Feature parent = getFeature(left.getId());
                     if (parent != null) {
                         children.add(parent);
                     }
                 }
             } else {
-                if (r.belongsToLeftSide(leftSide)) {
-                    ArrayList<String> rightSide = r.getRightSide();
-                    for (String right : rightSide) {
-                        Feature child = getFeature(right);
+                if (r.presentAtLeftSide(leftSide)) {
+                    List<Feature> rightSide = ((BasicRelationship) r).getRightSide();
+                    for (Feature right : rightSide) {
+                        Feature child = getFeature(right.getId());
                         if (child != null) {
                             children.add(child);
                         }
@@ -228,158 +184,112 @@ public class FeatureModel {
     }
 
     /**
-     * Gets all {@link Relationship}s in which the given {@link Feature} participates.
-     * @param feature
-     * @return an array of {@link Relationship}s.
-     */
-    private ArrayList<Relationship> getRelationshipsWith(Feature feature) {
-        ArrayList<Relationship> rs = new ArrayList<>();
-        for (Relationship r : relationships) {
-            if (r.belongsToRightSide(feature) || r.belongsToLeftSide(feature)) {
-                rs.add(r);
-            }
-        }
-        for (Relationship r : constraints) {
-            if (!r.isType(Relationship.RelationshipType.SPECIAL)) {
-                if (r.belongsToRightSide(feature) || r.belongsToLeftSide(feature)) {
-                    rs.add(r);
-                }
-            }
-            // TODO - 3CNF
-        }
-        return rs;
-    }
-
-    /**
      * Gets all parent {@link Feature}s of the given {@link Feature}.
      * @param rightSide a {@link Feature}.
      * @return an array of {@link Feature}s.
-     * @throws FeatureModelException
      */
-    public ArrayList<Feature> getMandatoryParents(Feature rightSide) throws FeatureModelException {
-        ArrayList<Feature> parents = new ArrayList<>();
+    public List<Feature> getMandatoryParents(@NonNull Feature rightSide) throws FeatureModelException {
+        List<Feature> parents = new LinkedList<>();
 
-        ArrayList<Relationship> relationships = getRelationshipsWith(rightSide);
+        List<Relationship> relationships = getRelationshipsWith(rightSide);
         for (Relationship r : relationships) {
-            ArrayList<String> parentsqueue = new ArrayList<>();
-            if (r.getType() == Relationship.RelationshipType.REQUIRES) {
-                if (r.belongsToRightSide(rightSide)) {
-                    parentsqueue.add(rightSide.toString());
+            List<Feature> parentsqueue = new LinkedList<>();
+            if (r.isType(RelationshipType.REQUIRES)) {
+                if (r.presentAtRightSide(rightSide)) {
+                    parentsqueue.add(rightSide);
                     getMandatoryParent(r, rightSide, parents, parentsqueue);
                 }
-            } else if (r.getType() == Relationship.RelationshipType.ALTERNATIVE
-                    || r.getType() == Relationship.RelationshipType.OR) {
-                if (r.belongsToRightSide(rightSide) || r.belongsToLeftSide(rightSide)) {
-                    parentsqueue.add(rightSide.toString());
-                    getMandatoryParent(r, rightSide, parents, parentsqueue);
-                }
+            } else if (r.isType(RelationshipType.ALTERNATIVE)
+                    || r.isType(RelationshipType.OR)) {
+                parentsqueue.add(rightSide);
+                getMandatoryParent(r, rightSide, parents, parentsqueue);
             } // TODO - 3CNF
         }
 
         return parents;
     }
 
-    private void getMandatoryParent(Relationship r, Feature feature, ArrayList<Feature> parents, ArrayList<String> parentsqueue) throws FeatureModelException {
+    private void getMandatoryParent(Relationship r, Feature feature, List<Feature> parents, List<Feature> parentsqueue) throws FeatureModelException {
         if (feature.toString().equals(this.getName())) return;
 
-        if (r.getType() == Relationship.RelationshipType.REQUIRES) {
-            String left = r.getLeftSide();
-            Feature parent = getFeature(left);
+        if (r.isType(RelationshipType.REQUIRES)) {
+            Feature parent = ((BasicRelationship) r).getLeftSide();
 
             if (parent.getName().equals(this.getName())) return;
-            if (isExistInArrayList(parentsqueue, left)) return;
+            if (parentsqueue.contains(parent)) return;
 
-            if (this.isMandatoryFeature(parent)) {
-                if (!parents.contains(parent)) {
-                    parents.add(parent);
-                }
-            } else {
+            exploreMandatoryParent(parents, parentsqueue, parent);
 
-                ArrayList<Relationship> relationships = getRelationshipsWith(parent);
-                for (Relationship r1 : relationships) {
-                    if (r1.getType() == Relationship.RelationshipType.REQUIRES) {
-                        if (r1.belongsToRightSide(parent)) {
-                            parentsqueue.add(left);
-                            getMandatoryParent(r1, parent, parents, parentsqueue);
-                            parentsqueue.remove(parentsqueue.size() - 1);
-                        }
-                    } else if (r1.getType() == Relationship.RelationshipType.ALTERNATIVE
-                            || r1.getType() == Relationship.RelationshipType.OR) {
-                        if (r1.belongsToRightSide(parent) || r1.belongsToLeftSide(parent)) {
-                            parentsqueue.add(left);
-                            getMandatoryParent(r1, parent, parents, parentsqueue);
-                            parentsqueue.remove(parentsqueue.size() - 1);
-                        }
-                    }
-                }
-            }
-        } else if (r.getType() == Relationship.RelationshipType.ALTERNATIVE
-                || r.getType() == Relationship.RelationshipType.OR) {
-            if (r.belongsToRightSide(feature)) {
-                String left = r.getLeftSide();
-                Feature parent = getFeature(left);
+        } else if (r.getType() == RelationshipType.ALTERNATIVE
+                || r.getType() == RelationshipType.OR) {
+            if (r.presentAtRightSide(feature)) {
+                Feature parent = ((BasicRelationship) r).getLeftSide();
 
                 if (parent.getName().equals(this.getName())) return;
-                if (isExistInArrayList(parentsqueue,left)) return;
+                if (parentsqueue.contains(parent)) return;
 
-                if (this.isMandatoryFeature(parent)) {
-                    if (!parents.contains(parent)) {
-                        parents.add(parent);
-                    }
-                } else {
-                    ArrayList<Relationship> relationships = getRelationshipsWith(parent);
-                    for (Relationship r1 : relationships) {
-                        if (r1.getType() == Relationship.RelationshipType.REQUIRES) {
-                            if (r1.belongsToRightSide(parent)) {
-                                parentsqueue.add(left);
-                                getMandatoryParent(r1, parent, parents, parentsqueue);
-                                parentsqueue.remove(parentsqueue.size() - 1);
-                            }
-                        } else if (r1.getType() == Relationship.RelationshipType.ALTERNATIVE
-                                || r1.getType() == Relationship.RelationshipType.OR) {
-                            if (r1.belongsToRightSide(parent) || r1.belongsToLeftSide(parent)) {
-                                parentsqueue.add(left);
-                                getMandatoryParent(r1, parent, parents, parentsqueue);
-                                parentsqueue.remove(parentsqueue.size() - 1);
-                            }
-                        }
-                    }
-                }
-            } else if (r.belongsToLeftSide(feature)) {
-                ArrayList<String> lefts = r.getRightSide();
-                for (String left: lefts) {
+                exploreMandatoryParent(parents, parentsqueue, parent);
+            } else if (r.presentAtLeftSide(feature)) {
+                List<Feature> lefts = ((BasicRelationship)r).getRightSide();
+                for (Feature parent: lefts) {
 
-                    if (isExistInArrayList(parentsqueue,left)) return;
-
-                    Feature parent = getFeature(left);
+                    if (parentsqueue.contains(parent)) return;
                     if (parent.getName().equals(this.getName())) return;
 
-                    if (this.isMandatoryFeature(parent)) {
-                        if (!parents.contains(parent)) {
-                            parents.add(parent);
-                        }
-                    } else {
-                        ArrayList<Relationship> relationships = getRelationshipsWith(parent);
-                        for (Relationship r1 : relationships) {
-                            if (r1.getType() == Relationship.RelationshipType.REQUIRES) {
-                                if (r1.belongsToRightSide(parent)) {
-                                    parentsqueue.add(left);
-                                    getMandatoryParent(r1, parent, parents, parentsqueue);
-                                    parentsqueue.remove(parentsqueue.size() - 1);
-                                }
-                            } else if (r1.getType() == Relationship.RelationshipType.ALTERNATIVE
-                                    || r1.getType() == Relationship.RelationshipType.OR) {
-                                if (r1.belongsToRightSide(parent) || r1.belongsToLeftSide(parent)) {
-                                    parentsqueue.add(left);
-                                    getMandatoryParent(r1, parent, parents, parentsqueue);
-                                    parentsqueue.remove(parentsqueue.size() - 1);
-                                }
-                            }
-                        }
-                    }
+                    exploreMandatoryParent(parents, parentsqueue, parent);
                 }
             }
         }
+    }
+
+    private void exploreMandatoryParent(List<Feature> parents, List<Feature> parentsqueue, Feature parent) throws FeatureModelException {
+        if (this.isMandatoryFeature(parent)) {
+            if (!parents.contains(parent)) {
+                parents.add(parent);
+            }
+        } else {
+            List<Relationship> relationships = getRelationshipsWith(parent);
+            for (Relationship r1 : relationships) {
+                if (r1.isType(RelationshipType.REQUIRES)) {
+                    if (r1.presentAtRightSide(parent)) {
+                        parentsqueue.add(parent);
+                        getMandatoryParent(r1, parent, parents, parentsqueue);
+                        parentsqueue.remove(parentsqueue.size() - 1);
+                    }
+                } else if (r1.isType(RelationshipType.ALTERNATIVE)
+                        || r1.isType(RelationshipType.OR)) {
+                    parentsqueue.add(parent);
+                    getMandatoryParent(r1, parent, parents, parentsqueue);
+                    parentsqueue.remove(parentsqueue.size() - 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets all {@link Relationship}s in which the given {@link Feature} participates.
+     * @param feature a {@link Feature}
+     * @return an array of {@link Relationship}s.
+     */
+    public List<Relationship> getRelationshipsWith(@NonNull Feature feature) {
+        List<Relationship> rs = new LinkedList<>();
+        for (Relationship r : relationships) {
+            if (r.presentAtRightSide(feature) || r.presentAtLeftSide(feature)) {
+                rs.add(r);
+            }
+        }
+        for (Relationship r : constraints) {
+            if (!r.isType(RelationshipType.ThreeCNF)) {
+                if (r.presentAtRightSide(feature) || r.presentAtLeftSide(feature)) {
+                    rs.add(r);
+                }
+            } else { // 3CNF
+                if (r.contains(feature)) {
+                    rs.add(r);
+                }
+            }
+        }
+        return rs;
     }
 
     /**
@@ -388,20 +298,20 @@ public class FeatureModel {
      * @param leftSide the left part of relationship
      * @param rightSide the right part of relationship
      */
-    public void addRelationship(Relationship.RelationshipType type, String leftSide, String[] rightSide) {
-        ArrayList<String> rightSideAL = convertArray2ArrayList(rightSide);
-
-        Relationship r = new Relationship(type, leftSide, rightSideAL);
+    public void addRelationship(RelationshipType type, @NonNull Feature leftSide, @NonNull List<Feature> rightSide) {
+        Relationship r = new BasicRelationship(type, leftSide, rightSide);
         this.relationships.add(r);
+
+        log.trace("{}Added relationship [relationship={}]", LoggerUtils.tab, r);
     }
 
-    /**
-     * Gets all {@link Relationship}s
-     * @return an array of {@link Relationship}s
-     */
-    public ArrayList<Relationship> getRelationships() {
-        return relationships;
-    }
+//    /**
+//     * Gets all {@link Relationship}s
+//     * @return an array of {@link Relationship}s
+//     */
+//    public List<Relationship> getRelationships() {
+//        return relationships;
+//    }
 
     /**
      * Gets the number of relationships.
@@ -416,9 +326,9 @@ public class FeatureModel {
      * @param type type of relationships
      * @return number of relationships with the specific type.
      */
-    public int getNumOfRelationships(Relationship.RelationshipType type) {
+    public int getNumOfRelationships(RelationshipType type) {
         int count = 0;
-        if (type == Relationship.RelationshipType.REQUIRES || type == Relationship.RelationshipType.EXCLUDES) {
+        if (type == RelationshipType.REQUIRES || type == RelationshipType.EXCLUDES) {
             for (Relationship relationship : constraints) {
                 if (relationship.isType(type)) {
                     count++;
@@ -440,11 +350,11 @@ public class FeatureModel {
      * @param leftSide left part of the constraint
      * @param rightSide right part of the constraint
      */
-    public void addConstraint(Relationship.RelationshipType type, String leftSide, String[] rightSide) {
-        ArrayList<String> rightSideAL = convertArray2ArrayList(rightSide);
-
-        Relationship r = new Relationship(type, leftSide, rightSideAL);
+    public void addConstraint(RelationshipType type, @NonNull Feature leftSide, @NonNull List<Feature> rightSide) {
+        Relationship r = new BasicRelationship(type, leftSide, rightSide);
         this.constraints.add(r);
+
+        log.trace("{}Added constraint [constraint={}]", LoggerUtils.tab, r);
     }
 
     /**
@@ -452,17 +362,11 @@ public class FeatureModel {
      * @param type type of relationship
      * @param constraint3CNF 3CNF constraint
      */
-    public void addConstraint(Relationship.RelationshipType type, String constraint3CNF) {
-        Relationship r = new Relationship(type, constraint3CNF);
+    public void addConstraint(RelationshipType type, String constraint3CNF) {
+        Relationship r = new ThreeCNFConstraint(type, constraint3CNF);
         this.constraints.add(r);
-    }
 
-    /**
-     * Gets all constraints.
-     * @return an array of {@link Relationship}s.
-     */
-    public ArrayList<Relationship> getConstraints() {
-        return constraints;
+        log.trace("{}Added constraint [constraint={}]", LoggerUtils.tab, r);
     }
 
     /**
@@ -486,23 +390,15 @@ public class FeatureModel {
 
         st.append("RELATIONSHIPS:\n");
         for (Relationship relationship: relationships) {
-            st.append(String.format("\t%s\n", relationship.getConfRule()));
+            st.append(String.format("\t%s\n", relationship));
         }
 
         st.append("CONSTRAINTS:\n");
         for (Relationship constraint: constraints) {
-            st.append(String.format("\t%s\n", constraint.getConfRule()));
+            st.append(String.format("\t%s\n", constraint));
         }
 
         return st.toString();
-    }
-
-    private ArrayList<String> convertArray2ArrayList(String[] arrStr) {
-        ArrayList<String> arrList = new ArrayList<String>();
-        for(String name: arrStr) {
-            arrList.add(name);
-        }
-        return arrList;
     }
 }
 

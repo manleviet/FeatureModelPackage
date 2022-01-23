@@ -1,7 +1,7 @@
 /*
  * at.tugraz.ist.ase.fm - A Maven package for feature models
  *
- * Copyright (c) 2021.
+ * Copyright (c) 2021-2022
  *
  * @author: Viet-Man Le (vietman.le@ist.tugraz.at)
  */
@@ -10,8 +10,6 @@ package at.tugraz.ist.ase.fm.core;
 
 /**
  * An exception for errors which occur in parsing feature model files
- *
- * @author Viet-Man Le (vietman.le@ist.tugraz.at)
  */
 public class FeatureModelException extends Exception {
     public FeatureModelException(String message) {
