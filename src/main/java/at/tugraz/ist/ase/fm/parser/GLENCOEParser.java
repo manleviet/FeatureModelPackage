@@ -68,7 +68,7 @@ public class GLENCOEParser implements FeatureModelParser {
                 return true; // it is Glencoe format
             }
         } catch (Exception e) {
-            return false; // if it raise an exception, it's not Glencoe format
+            return false; // if it occurs an exception, it's not Glencoe format
         }
         return false;
     }

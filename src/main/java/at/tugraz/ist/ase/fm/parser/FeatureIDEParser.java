@@ -69,7 +69,7 @@ public class FeatureIDEParser implements FeatureModelParser {
                 return true;
             }
         } catch (SAXException | IOException | ParserConfigurationException e) {
-            return false; // if it raise an exception, it's not FeatureIDE format
+            return false; // if it occurs an exception, it's not FeatureIDE format
         }
         return false;
     }
