@@ -126,7 +126,7 @@ public class SXFMParser implements FeatureModelParser {
      *
      * @param sxfm - a {@link fm.FeatureModel}
      */
-    private void convertFeatures(fm.FeatureModel sxfm, FeatureModel featureModel) {
+    private void convertFeatures(fm.FeatureModel sxfm, FeatureModel fm) {
         log.trace("{}Generating features >>>", LoggerUtils.tab);
         LoggerUtils.indent();
 
@@ -143,7 +143,7 @@ public class SXFMParser implements FeatureModelParser {
                 String name = node.getName();
                 String id = node.getID();
 
-                featureModel.addFeature(name, id);
+                fm.addFeature(name, id);
             }
 
             exploreChildren(queue, node);
@@ -163,47 +163,51 @@ public class SXFMParser implements FeatureModelParser {
      * Iterates nodes to take the relationships between features.
      *
      * @param sxfm - a {@link fm.FeatureModel}
-     * @param featureModel - a {@link FeatureModel}
+     * @param fm - a {@link FeatureModel}
      * @throws FeatureModelParserException a ParserException
      */
-    private void convertRelationships(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
+    private void convertRelationships(fm.FeatureModel sxfm, FeatureModel fm) throws FeatureModelParserException {
         log.trace("{}Generating relationships >>>", LoggerUtils.tab);
         LoggerUtils.indent();
 
-        Queue<FeatureTreeNode> queue = new LinkedList<>();
-        queue.add(sxfm.getRoot());
+        try {
+            Queue<FeatureTreeNode> queue = new LinkedList<>();
+            queue.add(sxfm.getRoot());
 
-        FeatureTreeNode node;
-        while (!queue.isEmpty()) {
-            node = queue.remove();
+            FeatureTreeNode node;
+            while (!queue.isEmpty()) {
+                node = queue.remove();
 
-            Feature leftSide;
-            List<Feature> rightSide = new LinkedList<>();
-            RelationshipType type;
+                Feature leftSide;
+                List<Feature> rightSide = new LinkedList<>();
+                RelationshipType type;
 
-            if (node instanceof SolitaireFeature) {
-                if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
-                    type = RelationshipType.OPTIONAL;
-                    leftSide = featureModel.getFeature(node.getID());
-                    rightSide.add(featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID()));
-                } else { // MANDATORY
-                    type = RelationshipType.MANDATORY;
-                    leftSide = featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID());
-                    rightSide.add(featureModel.getFeature(node.getID()));
+                if (node instanceof SolitaireFeature) {
+                    if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
+                        type = RelationshipType.OPTIONAL;
+                        leftSide = fm.getFeature(node.getID());
+                        rightSide.add(fm.getFeature(((FeatureTreeNode) node.getParent()).getID()));
+                    } else { // MANDATORY
+                        type = RelationshipType.MANDATORY;
+                        leftSide = fm.getFeature(((FeatureTreeNode) node.getParent()).getID());
+                        rightSide.add(fm.getFeature(node.getID()));
+                    }
+                    fm.addRelationship(type, leftSide, rightSide);
+                } else if (node instanceof FeatureGroup) {
+                    leftSide = fm.getFeature(((FeatureTreeNode) node.getParent()).getID());
+                    rightSide = getChildren(node);
+                    if (((FeatureGroup) node).getMax() == 1) { // ALTERNATIVE
+                        type = RelationshipType.ALTERNATIVE;
+                    } else { // OR
+                        type = RelationshipType.OR;
+                    }
+                    fm.addRelationship(type, leftSide, rightSide);
                 }
-                featureModel.addRelationship(type, leftSide, rightSide);
-            } else if (node instanceof FeatureGroup) {
-                leftSide = featureModel.getFeature(((FeatureTreeNode) node.getParent()).getID());
-                rightSide = getChildren(node);
-                if (((FeatureGroup) node).getMax() == 1) { // ALTERNATIVE
-                    type = RelationshipType.ALTERNATIVE;
-                } else { // OR
-                    type = RelationshipType.OR;
-                }
-                featureModel.addRelationship(type, leftSide, rightSide);
+
+                exploreChildren(queue, node);
             }
-
-            exploreChildren(queue, node);
+        } catch (at.tugraz.ist.ase.fm.core.FeatureModelException ex) {
+            throw new FeatureModelParserException(ex.getMessage());
         }
 
         LoggerUtils.outdent();
@@ -213,10 +217,10 @@ public class SXFMParser implements FeatureModelParser {
      * Converts constraints on the file into constraints in {@link FeatureModel}
      *
      * @param sxfm - a {@link fm.FeatureModel}
-     * @param featureModel - a {@link FeatureModel}
+     * @param fm - a {@link FeatureModel}
      * @throws FeatureModelParserException a ParserException
      */
-    private void convertConstraints(fm.FeatureModel sxfm, FeatureModel featureModel) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
+    private void convertConstraints(fm.FeatureModel sxfm, FeatureModel fm) throws FeatureModelParserException, at.tugraz.ist.ase.fm.core.FeatureModelException {
         log.trace("{}Generating constraints >>>", LoggerUtils.tab);
         LoggerUtils.indent();
 
@@ -239,11 +243,11 @@ public class SXFMParser implements FeatureModelParser {
                     throw new FeatureModelParserException(formula + " is not supported constraints!");
                 }
 
-                Feature left = featureModel.getFeature(leftSide.getID());
+                Feature left = fm.getFeature(leftSide.getID());
                 List<Feature> rightSideList = new LinkedList<>();
-                rightSideList.add(featureModel.getFeature(rightSide.getID()));
+                rightSideList.add(fm.getFeature(rightSide.getID()));
 
-                featureModel.addConstraint(type, left, rightSideList);
+                fm.addConstraint(type, left, rightSideList);
             } else {
                 // take type
                 RelationshipType type = RelationshipType.ThreeCNF;
@@ -258,7 +262,7 @@ public class SXFMParser implements FeatureModelParser {
                     }
                 }
 
-                featureModel.addConstraint(type, String.join(" & ", threecnf_constraints));
+                fm.addConstraint(type, String.join(" & ", threecnf_constraints));
             }
         }
         LoggerUtils.outdent();
