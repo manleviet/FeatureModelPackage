@@ -16,6 +16,7 @@ import at.tugraz.ist.ase.fm.core.RelationshipType;
 import com.google.common.annotations.Beta;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -146,11 +147,8 @@ public class FeatureIDEParser implements FeatureModelParser {
         try {
             NodeList children = node.getChildNodes();
             Element parentElement = (Element) node;
-            // take children names
-            List<String> childrenName = getChildrenName(node);
-            for (String childName : childrenName) {
-                fm.addFeature(childName, childName);
-            }
+            // create features for child nodes
+            List<Feature> childrenFeatures = createChildFeaturesIfAbsent(node, fm);
 
             // convert relationships
             if (!node.getNodeName().equals("struct")) {
@@ -188,20 +186,14 @@ public class FeatureIDEParser implements FeatureModelParser {
                         break;
                     case "or":
                         leftSide = fm.getFeature(parentElement.getAttribute("name"));
-                        rightSide = new LinkedList<>();
-                        for (String childName : childrenName) {
-                            rightSide.add(fm.getFeature(childName));
-                        }
+                        rightSide = childrenFeatures;
                         type = RelationshipType.OR;
 
                         fm.addRelationship(type, leftSide, rightSide);
                         break;
                     case "alt":
                         leftSide = fm.getFeature(parentElement.getAttribute("name"));
-                        rightSide = new LinkedList<>();
-                        for (String childName : childrenName) {
-                            rightSide.add(fm.getFeature(childName));
-                        }
+                        rightSide = childrenFeatures;
                         type = RelationshipType.ALTERNATIVE;
 
                         fm.addRelationship(type, leftSide, rightSide);
@@ -217,31 +209,49 @@ public class FeatureIDEParser implements FeatureModelParser {
                 }
             }
         } catch (FeatureModelException e) {
-            throw new FeatureModelParserException("Couldn't parse the node [" + node + "]");
+            throw new FeatureModelParserException(e.getMessage());
         }
     }
 
     /**
-     * Take the names of child nodes of a XML node.
+     * Gets or creates the children {@link Feature}s of a given XML node.
      *
      * @param node - a XML node
-     * @return an array of names of child nodes of a given XML node
+     * @return a list of children {@link Feature}s a given XML node
      */
-    private List<String> getChildrenName(Node node) {
+    private List<Feature> createChildFeaturesIfAbsent(Node node, FeatureModel fm) throws FeatureModelParserException {
         NodeList children = node.getChildNodes();
-        List<String> names = new LinkedList<>();
+        List<Feature> features = new LinkedList<>();
 
         for (int i = 0; i < children.getLength(); i++)
         {
             Node child = children.item(i);
             if (isCorrectNode(child)) {
                 Element childElement = (Element) child;
+                String name = childElement.getAttribute("name");
 
-                names.add(childElement.getAttribute("name"));
+                Feature childFeature;
+                try {
+                    // first, try to get the feature with id=name
+                    childFeature = fm.getFeature(name);
+                } catch (FeatureModelException e) {
+
+                    // create new feature
+                    fm.addFeature(name, name);
+
+                    try {
+                        // try to get again
+                        childFeature = fm.getFeature(name);
+                    } catch (FeatureModelException ex) {
+                        throw new FeatureModelParserException(e.getMessage());
+                    }
+                }
+
+                features.add(childFeature);
             }
         }
 
-        return names;
+        return features;
     }
 
     /**
@@ -305,13 +315,12 @@ public class FeatureIDEParser implements FeatureModelParser {
                     rightSideList.add(fm.getFeature(n1.item(3).getChildNodes().item(1).getTextContent()));
                     type = RelationshipType.EXCLUDES;
                 }
-
                 default -> throw new FeatureModelParserException(n.getNodeName() + " is an wrong name for constraints!");
             }
 
             fm.addConstraint(type, left, rightSideList);
         } catch (FeatureModelException e) {
-            throw new FeatureModelParserException("Couldn't parse the node [" + node + "]");
+            throw new FeatureModelParserException(e.getMessage());
         }
     }
 }
