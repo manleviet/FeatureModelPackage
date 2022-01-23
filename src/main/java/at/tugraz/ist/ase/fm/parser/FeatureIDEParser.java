@@ -28,6 +28,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -168,14 +169,12 @@ public class FeatureIDEParser implements FeatureModelParser {
                                 if (childElement.getAttribute("mandatory").equals("true")) {
                                     // MANDATORY
                                     leftSide = fm.getFeature(parentElement.getAttribute("name"));
-                                    rightSide = new LinkedList<>();
-                                    rightSide.add(fm.getFeature(childElement.getAttribute("name")));
+                                    rightSide = Collections.singletonList(fm.getFeature(childElement.getAttribute("name")));
                                     type = RelationshipType.MANDATORY;
                                 } else {
                                     // OPTIONAL
                                     leftSide = fm.getFeature(childElement.getAttribute("name"));
-                                    rightSide = new LinkedList<>();
-                                    rightSide.add(fm.getFeature(parentElement.getAttribute("name")));
+                                    rightSide = Collections.singletonList(fm.getFeature(parentElement.getAttribute("name")));
                                     type = RelationshipType.OPTIONAL;
                                 }
 
@@ -300,22 +299,23 @@ public class FeatureIDEParser implements FeatureModelParser {
             Node n = node.getChildNodes().item(1);
 
             Feature left;
-            List<Feature> rightSideList = new LinkedList<>();
+            List<Feature> rightSideList;
             RelationshipType type;
 
-            switch (n.getNodeName()) {
+            String constraintType = n.getNodeName();
+            switch (constraintType) {
                 case "imp" -> {
                     left = fm.getFeature(n.getChildNodes().item(1).getTextContent());
-                    rightSideList.add(fm.getFeature(n.getChildNodes().item(3).getTextContent()));
+                    rightSideList = Collections.singletonList(fm.getFeature(n.getChildNodes().item(3).getTextContent()));
                     type = RelationshipType.REQUIRES;
                 }
                 case "disj" -> {
                     NodeList n1 = n.getChildNodes();
                     left = fm.getFeature(n1.item(1).getChildNodes().item(1).getTextContent());
-                    rightSideList.add(fm.getFeature(n1.item(3).getChildNodes().item(1).getTextContent()));
+                    rightSideList = Collections.singletonList(fm.getFeature(n1.item(3).getChildNodes().item(1).getTextContent()));
                     type = RelationshipType.EXCLUDES;
                 }
-                default -> throw new FeatureModelParserException("Unexpected constraint type: " + n.getNodeName());
+                default -> throw new FeatureModelParserException("Unexpected constraint type: " + constraintType);
             }
 
             fm.addConstraint(type, left, rightSideList);
