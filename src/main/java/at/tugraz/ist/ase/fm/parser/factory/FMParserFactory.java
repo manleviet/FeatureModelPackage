@@ -8,10 +8,7 @@
 
 package at.tugraz.ist.ase.fm.parser.factory;
 
-import at.tugraz.ist.ase.fm.parser.FMFormat;
-import at.tugraz.ist.ase.fm.parser.FeatureIDEParser;
-import at.tugraz.ist.ase.fm.parser.FeatureModelParser;
-import at.tugraz.ist.ase.fm.parser.SXFMParser;
+import at.tugraz.ist.ase.fm.parser.*;
 
 public class FMParserFactory extends AbstractFMParserFactory {
 
@@ -28,6 +25,7 @@ public class FMParserFactory extends AbstractFMParserFactory {
         return switch (fmFormat) {
             case SXFM -> new SXFMParser();
             case FEATUREIDE -> new FeatureIDEParser();
+            case GLENCOE -> new GLENCOEParser();
             default -> throw new IllegalArgumentException("Unsupported feature model format: " + fmFormat);
         };
     }
