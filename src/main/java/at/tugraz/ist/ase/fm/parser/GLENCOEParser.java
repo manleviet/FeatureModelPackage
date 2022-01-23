@@ -1,11 +1,9 @@
-/* FM2ExConf - A Generator for Excel-based configurators
- * Copyright (C) 2020-2020  AIG team, Institute for Software Technology,
- * Graz University of Technology, Austria
+/*
+ * at.tugraz.ist.ase.fm - A Maven package for feature models
  *
- * FM2ExConf is a tool enabling translate feature models into
- * configurators in Excel worksheet.
+ * Copyright (c) 2022
  *
- * Contact: http://ase.ist.tugraz.at/ASE/
+ * @author: Viet-Man Le (vietman.le@ist.tugraz.at)
  */
 
 package at.tugraz.ist.ase.fm.parser;
