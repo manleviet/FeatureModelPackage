@@ -26,6 +26,7 @@ public class FMParserFactory extends AbstractFMParserFactory {
             case SXFM -> new SXFMParser();
             case FEATUREIDE -> new FeatureIDEParser();
             case GLENCOE -> new GLENCOEParser();
+            case XMI -> new XMIParser();
             default -> throw new IllegalArgumentException("Unsupported feature model format: " + fmFormat);
         };
     }
