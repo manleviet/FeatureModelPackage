@@ -184,6 +184,8 @@ public class FeatureIDEParser implements FeatureModelParser {
 
                         break;
                     case "or":
+                        checkState(childrenFeatures.size() > 0, "OR node must have at least one child feature!");
+
                         leftSide = fm.getFeature(parentElement.getAttribute("name"));
                         rightSide = childrenFeatures;
                         type = RelationshipType.OR;
@@ -191,6 +193,8 @@ public class FeatureIDEParser implements FeatureModelParser {
                         fm.addRelationship(type, leftSide, rightSide);
                         break;
                     case "alt":
+                        checkState(childrenFeatures.size() > 0, "ALT node must have at least one child feature!");
+
                         leftSide = fm.getFeature(parentElement.getAttribute("name"));
                         rightSide = childrenFeatures;
                         type = RelationshipType.ALTERNATIVE;
@@ -207,7 +211,7 @@ public class FeatureIDEParser implements FeatureModelParser {
                     examineAStructNode(child, fm);
                 }
             }
-        } catch (FeatureModelException e) {
+        } catch (Exception e) {
             throw new FeatureModelParserException(e.getMessage());
         }
     }

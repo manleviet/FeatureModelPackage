@@ -197,6 +197,8 @@ public class GLENCOEParser implements FeatureModelParser {
                             }
                             break;
                         case "XOR":
+                            checkState(childrenFeatures.size() > 0, "ALT relationship must have at least one child.");
+
                             leftSide = fm.getFeature(parentID);
                             rightSide = childrenFeatures;
                             type = RelationshipType.ALTERNATIVE;
@@ -204,6 +206,8 @@ public class GLENCOEParser implements FeatureModelParser {
                             fm.addRelationship(type, leftSide, rightSide);
                             break;
                         case "OR":
+                            checkState(childrenFeatures.size() > 0, "OR relationship must have at least one child.");
+
                             leftSide = fm.getFeature(parentID);
                             rightSide = childrenFeatures;
                             type = RelationshipType.OR;

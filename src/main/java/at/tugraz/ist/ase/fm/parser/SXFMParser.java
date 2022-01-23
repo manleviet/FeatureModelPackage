@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Queue;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * A parser for the SPLOT format
@@ -197,6 +198,9 @@ public class SXFMParser implements FeatureModelParser {
                 } else if (node instanceof FeatureGroup) {
                     leftSide = fm.getFeature(((FeatureTreeNode) node.getParent()).getID());
                     rightSide = getChildren(node);
+
+                    checkState(rightSide.size() > 0, "OR and ALT relationships must have at least one child.");
+
                     if (((FeatureGroup) node).getMax() == 1) { // ALTERNATIVE
                         type = RelationshipType.ALTERNATIVE;
                     } else { // OR
