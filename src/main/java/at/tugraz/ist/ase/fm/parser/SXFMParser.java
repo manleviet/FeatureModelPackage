@@ -26,6 +26,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -179,18 +180,18 @@ public class SXFMParser implements FeatureModelParser {
                 node = queue.remove();
 
                 Feature leftSide;
-                List<Feature> rightSide = new LinkedList<>();
+                List<Feature> rightSide;
                 RelationshipType type;
 
                 if (node instanceof SolitaireFeature) {
                     if (((SolitaireFeature) node).isOptional()) { // OPTIONAL
                         type = RelationshipType.OPTIONAL;
                         leftSide = fm.getFeature(node.getID());
-                        rightSide.add(fm.getFeature(((FeatureTreeNode) node.getParent()).getID()));
+                        rightSide = Collections.singletonList(fm.getFeature(((FeatureTreeNode) node.getParent()).getID()));
                     } else { // MANDATORY
                         type = RelationshipType.MANDATORY;
                         leftSide = fm.getFeature(((FeatureTreeNode) node.getParent()).getID());
-                        rightSide.add(fm.getFeature(node.getID()));
+                        rightSide = Collections.singletonList(fm.getFeature(node.getID()));
                     }
                     fm.addRelationship(type, leftSide, rightSide);
                 } else if (node instanceof FeatureGroup) {
@@ -244,8 +245,7 @@ public class SXFMParser implements FeatureModelParser {
                 }
 
                 Feature left = fm.getFeature(leftSide.getID());
-                List<Feature> rightSideList = new LinkedList<>();
-                rightSideList.add(fm.getFeature(rightSide.getID()));
+                List<Feature> rightSideList = Collections.singletonList(fm.getFeature(rightSide.getID()));
 
                 fm.addConstraint(type, left, rightSideList);
             } else {
