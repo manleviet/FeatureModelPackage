@@ -163,7 +163,7 @@ public class FeatureModelTest {
                 () -> assertEquals(RelationshipType.ThreeCNF, constraints.get(2).getType()),
 
                 () -> assertEquals("requires(F8, F6)", constraints.get(0).getConfRule()),
-                () -> assertEquals("excludes(F4, F1)", constraints.get(1).getConfRule()),
+                () -> assertEquals("excludes(F1, F4)", constraints.get(1).getConfRule()),
                 () -> assertEquals("3cnf(~F1, F7, F8)", constraints.get(2).getConfRule()),
 
                 () -> assertEquals(constraints.get(0), constraints.get(0)));
@@ -195,7 +195,7 @@ public class FeatureModelTest {
                 String.format("\t%s\n", "optional(F8, F2)") +
                 "CONSTRAINTS:\n" +
                 String.format("\t%s\n", "requires(F8, F6)") +
-                String.format("\t%s\n", "excludes(F4, F1)") +
+                String.format("\t%s\n", "excludes(F1, F4)") +
                 String.format("\t%s\n", "3cnf(~F1, F7, F8)") +
                 String.format("\t%s\n", "requires(F2, F6)");
 
@@ -231,7 +231,7 @@ public class FeatureModelTest {
                 "CONSTRAINTS:\n" +
                 String.format("\t%s\n", "requires(Camera, High Resolution)") +
                 String.format("\t%s\n", "requires(Compass, GPS)") +
-                String.format("\t%s\n", "excludes(Cellular, Analog)") +
+                String.format("\t%s\n", "excludes(Analog, Cellular)") +
                 String.format("\t%s\n", "3cnf(~Analog, Cellular, Wifi)");
 
         assertAll(() -> assertEquals(12, featureModel.getNumOfFeatures()),
