@@ -18,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
 
 /**
  * Represents a feature model
@@ -86,7 +87,7 @@ public class FeatureModel {
      * @return a {@link Feature}
      */
     public Feature getFeature(int index) {
-        checkArgument(index >= 0 && index < bfFeatures.size(), "Index out of bound!");
+        checkElementIndex(index, bfFeatures.size(), "Index out of bound!");
 
         return bfFeatures.get(index);
     }

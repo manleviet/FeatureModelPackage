@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="FeatureModel" />
         <module name="fm" />
+        <module name="FeatureModelPackage" />
       </profile>
     </annotationProcessing>
   </component>
