@@ -6,7 +6,7 @@
 
     <groupId>at.tugraz.ist.ase</groupId>
     <artifactId>fm</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -20,7 +20,7 @@
         <dependency>
             <groupId>at.tugraz.ist.ase</groupId>
             <artifactId>common</artifactId>
-            <version>1.2</version>
+            <version>1.2.1</version>
         </dependency>
 
         <dependency>
@@ -32,13 +32,13 @@
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20180813</version>
+            <version>20211205</version>
         </dependency>
 
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-maven-plugin</artifactId>
-            <version>4.8-1</version>
+            <version>4.9.3</version>
         </dependency>
     </dependencies>
 
