@@ -19,13 +19,13 @@ public enum FMFormat {
     GLENCOE, // Glencoe format
     DESCRIPTIVE; // my format
 
-    public FMFormat getFMFormat(String format) {
+    public static FMFormat getFMFormat(String format) {
         return switch (format) {
-            case ".sxfm", ".splx" -> FMFormat.SXFM;
-            case ".xml" -> FMFormat.FEATUREIDE;
-            case ".xmi" -> FMFormat.XMI;
-            case ".json" -> FMFormat.GLENCOE;
-            case ".fm4conf" -> FMFormat.DESCRIPTIVE;
+            case "sxfm", "splx" -> FMFormat.SXFM;
+            case "xml" -> FMFormat.FEATUREIDE;
+            case "xmi" -> FMFormat.XMI;
+            case "json" -> FMFormat.GLENCOE;
+            case "fm4conf" -> FMFormat.DESCRIPTIVE;
             default -> FMFormat.NONE;
         };
     }
