@@ -101,7 +101,7 @@ public class SXFMParser implements FeatureModelParser {
             // create the feature model
             featureModel = new FeatureModel();
 
-            featureModel.setName(sxfm.getName());
+            featureModel.setName(filePath.getName());
             // convert features
             convertFeatures(sxfm, featureModel);
 

@@ -101,6 +101,7 @@ public class FeatureIDEParser implements FeatureModelParser {
 
             // create the feature model
             featureModel = new FeatureModel();
+            featureModel.setName(filePath.getName());
 
             convertStructNodes(rootEle, featureModel);
 

@@ -95,6 +95,8 @@ public class DescriptiveFormatParser extends FM4ConfBaseListener implements Feat
             ParseTreeWalker walker = new ParseTreeWalker();
             // feed to walker
             featureModel = new FeatureModel();
+            featureModel.setName(filePath.getName());
+
             walker.walk(this, tree);        // walk parse tree
         } catch (IOException e) {
             throw new FeatureModelParserException(e.getMessage());

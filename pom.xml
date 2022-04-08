@@ -6,7 +6,7 @@
 
     <groupId>at.tugraz.ist.ase</groupId>
     <artifactId>fm</artifactId>
-    <version>1.2.7</version>
+    <version>1.2.9</version>
     <packaging>jar</packaging>
 
     <properties>

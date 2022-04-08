@@ -104,6 +104,7 @@ public class XMIParser implements FeatureModelParser {
 
             // create the feature model
             featureModel = new FeatureModel();
+            featureModel.setName(filePath.getName());
 
             convertModelsNode(rootEle, featureModel);
 

@@ -100,6 +100,7 @@ public class GLENCOEParser implements FeatureModelParser {
 
             // create the feature model
             featureModel = new FeatureModel();
+            featureModel.setName(filePath.getName());
 
             convertTree(tree, features, featureModel);
 

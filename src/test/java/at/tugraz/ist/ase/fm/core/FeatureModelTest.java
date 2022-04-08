@@ -35,7 +35,7 @@ public class FeatureModelTest {
 
     @Test
     public void testGetName() {
-        assertEquals(featureModel.getName(), "FM_10_0");
+        assertEquals(featureModel.getName(), "FM_10_0.splx");
     }
 
     @Test
