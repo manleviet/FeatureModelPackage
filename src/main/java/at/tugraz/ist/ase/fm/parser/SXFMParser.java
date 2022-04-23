@@ -266,7 +266,7 @@ public class SXFMParser implements FeatureModelParser {
                     }
                 }
 
-                fm.addConstraint(type, String.join(" & ", threecnf_constraints));
+                fm.addConstraint(type, String.join(" | ", threecnf_constraints));
             }
         }
         LoggerUtils.outdent();

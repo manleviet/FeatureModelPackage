@@ -54,4 +54,24 @@ class FeatureIDEParserTest {
         assertAll(() -> assertNotNull(featureModel),
                 () -> assertEquals(expected, featureModel.toString()));
     }
+
+    @Test
+    void test1() throws FeatureModelParserException {
+        File fileFM = new File("src/test/resources/linux-2.6.33.3_simple.xml");
+        FMParserFactory factory = FMParserFactory.getInstance();
+        FeatureModelParser parser = factory.getParser(FMFormat.FEATUREIDE);
+        featureModel = parser.parse(fileFM);
+
+        assertAll(() -> assertNotNull(featureModel));
+    }
+
+    @Test
+    void test2() throws FeatureModelParserException {
+        File fileFM = new File("src/test/resources/linux-2.6.33.3.xml");
+        FMParserFactory factory = FMParserFactory.getInstance();
+        FeatureModelParser parser = factory.getParser(FMFormat.FEATUREIDE);
+        featureModel = parser.parse(fileFM);
+
+        assertAll(() -> assertNotNull(featureModel));
+    }
 }

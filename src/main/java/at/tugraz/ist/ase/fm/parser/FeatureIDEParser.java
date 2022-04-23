@@ -309,23 +309,64 @@ public class FeatureIDEParser implements FeatureModelParser {
 
             String constraintType = n.getNodeName();
             switch (constraintType) {
+                case "not" -> {
+                    type = RelationshipType.ThreeCNF;
+
+                    fm.addConstraint(type, "~" + n.getChildNodes().item(1).getTextContent());
+                }
                 case "imp" -> {
                     left = fm.getFeature(n.getChildNodes().item(1).getTextContent());
                     rightSideList = Collections.singletonList(fm.getFeature(n.getChildNodes().item(3).getTextContent()));
                     type = RelationshipType.REQUIRES;
+
+                    fm.addConstraint(type, left, rightSideList);
                 }
                 case "disj" -> {
                     NodeList n1 = n.getChildNodes();
-                    left = fm.getFeature(n1.item(1).getChildNodes().item(1).getTextContent());
-                    rightSideList = Collections.singletonList(fm.getFeature(n1.item(3).getChildNodes().item(1).getTextContent()));
-                    type = RelationshipType.EXCLUDES;
+                    List<String> clauses = new LinkedList<>();
+
+                    disjExplore(n1, clauses); // explore the disjunction rule
+
+                    if (clauses.size() == 2) {
+                        // requires or excludes
+                        if (clauses.get(0).startsWith("~") && clauses.get(1).startsWith("~")) { // excludes
+                            left = fm.getFeature(clauses.get(0).substring(1));
+                            rightSideList = Collections.singletonList(fm.getFeature(clauses.get(1).substring(1)));
+                            type = RelationshipType.EXCLUDES;
+                        } else { // requires
+                            if (clauses.get(0).startsWith("~")) {
+                                left = fm.getFeature(clauses.get(0).substring(1));
+                                rightSideList = Collections.singletonList(fm.getFeature(clauses.get(1)));
+                            } else {// if (clauses.get(1).startsWith("~")) {
+                                left = fm.getFeature(clauses.get(1).substring(1));
+                                rightSideList = Collections.singletonList(fm.getFeature(clauses.get(0)));
+                            }
+                            type = RelationshipType.REQUIRES;
+                        }
+
+                        fm.addConstraint(type, left, rightSideList);
+                    } else {
+                        // 3CNF
+                        type = RelationshipType.ThreeCNF;
+                        fm.addConstraint(type, String.join(" | ", clauses));
+                    }
                 }
                 default -> throw new FeatureModelParserException("Unexpected constraint type: " + constraintType);
             }
-
-            fm.addConstraint(type, left, rightSideList);
         } catch (FeatureModelException e) {
             throw new FeatureModelParserException(e.getMessage());
+        }
+    }
+
+    private void disjExplore(NodeList nodeList, List<String> clauses) throws FeatureModelParserException {
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node n = nodeList.item(i);
+
+            switch (n.getNodeName()) {
+                case "disj" -> disjExplore(n.getChildNodes(), clauses);
+                case "var" -> clauses.add(n.getTextContent());
+                case "not" -> clauses.add("~" + n.getChildNodes().item(1).getTextContent());
+            }
         }
     }
 }

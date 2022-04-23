@@ -53,7 +53,7 @@ class RelationshipTest {
                 f1,
                 Collections.singletonList(f2));
         specialRelationship = new ThreeCNFConstraint(RelationshipType.ThreeCNF,
-                "F1 & ~F2");
+                "~F1 | F2");
     }
 
     @Test
@@ -64,7 +64,7 @@ class RelationshipTest {
                 () -> assertEquals("alternative(F1, F2, F3)", alternativeRelationship.getConfRule()),
                 () -> assertEquals("requires(F1, F2)", requiresRelationship.getConfRule()),
                 () -> assertEquals("excludes(F1, F2)", excludesRelationship.getConfRule()),
-                () -> assertEquals("3cnf(F1, ~F2)", specialRelationship.getConfRule()));
+                () -> assertEquals("3cnf(~F1, F2)", specialRelationship.getConfRule()));
     }
 
     @Test
@@ -136,7 +136,7 @@ class RelationshipTest {
 
         Relationship r1 = ThreeCNFConstraint.builder()
                 .type(RelationshipType.ThreeCNF)
-                .constraint3CNF("F1 & ~F2")
+                .constraint3CNF("~F1 | F2")
                 .build();
 
         assertAll(() -> assertNotNull(r),
@@ -145,6 +145,6 @@ class RelationshipTest {
                 () -> assertEquals(f2, ((BasicRelationship) r).getRightSide().get(0)),
                 () -> assertEquals(1, ((BasicRelationship) r).getRightSide().size()),
                 () -> assertEquals("mandatory(F1, F2)", r.getConfRule()),
-                () -> assertEquals("3cnf(F1, ~F2)", r1.getConfRule()));
+                () -> assertEquals("3cnf(~F1, F2)", r1.getConfRule()));
     }
 }

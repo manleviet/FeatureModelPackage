@@ -20,10 +20,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Represent a 3-CNF constraint.
+ * A disjunction of clauses.
+ *
+ * A \/ B \/ C \/ D \/...
  */
 @Getter
 public class ThreeCNFConstraint extends Relationship {
-    private List<Clause> clauses;
+    private final List<Clause> clauses;
 
     /**
      * A constructor for 3CNF constraints.
@@ -48,7 +51,7 @@ public class ThreeCNFConstraint extends Relationship {
     }
 
     private void parse3CNFConstraint(String constraint3CNF) {
-        String[] clauses = constraint3CNF.split(" & ");
+        String[] clauses = constraint3CNF.split(" \\| ");
 
         for (String c: clauses) {
             Clause clause = new Clause(c);
