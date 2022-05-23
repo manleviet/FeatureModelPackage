@@ -1,5 +1,7 @@
 # at.tugraz.ist.ase.fm
 
+*Migrated to [https://github.com/manleviet/CA-CDR-V2](https://github.com/manleviet/CA-CDR-V2)*
+
 A Maven package for feature models
 
 ## How to use
